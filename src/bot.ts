@@ -5,27 +5,26 @@ import { OpenClawAgent } from "./agent";
 
 dotenv.config({ path: path.resolve(__dirname, "../.env") });
 
-// 환경변수 체크
-const requiredVars = ["TELEGRAM_BOT_TOKEN", "ALLOWED_USER_ID", "GOOGLE_API_KEY", "VAULT_PATH"];
-const missingVars = requiredVars.filter(key => !process.env[key]);
+const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+const ALLOWED_USER_ID = Number(process.env.ALLOWED_USER_ID);
+const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY; 
+const VAULT_PATH = process.env.VAULT_PATH || "/home/jblee/obsidian-vault";
 
-if (missingVars.length > 0) {
-  console.error(`❌ Missing .env variables: ${missingVars.join(", ")}`);
+if (!BOT_TOKEN || !ALLOWED_USER_ID || !GOOGLE_API_KEY) {
   process.exit(1);
 }
 
-const bot = new Bot(process.env.TELEGRAM_BOT_TOKEN!);
+const bot = new Bot(BOT_TOKEN);
 const agent = new OpenClawAgent(
-  process.env.GOOGLE_API_KEY!,
-  process.env.VAULT_PATH!,
+  GOOGLE_API_KEY, 
+  VAULT_PATH, 
   path.resolve(__dirname, "../persona.json")
 );
 
 const chatHistory: any[] = [];
-const ALLOWED_ID = Number(process.env.ALLOWED_USER_ID);
 
 bot.use(async (ctx, next) => {
-  if (ctx.from?.id !== ALLOWED_ID) return;
+  if (ctx.from?.id !== ALLOWED_USER_ID) return;
   await next();
 });
 
@@ -46,10 +45,16 @@ bot.on("message:text", async (ctx) => {
     chatHistory.push({ role: "assistant", content: response });
     if (chatHistory.length > 20) chatHistory.splice(0, 2);
 
-    await ctx.reply(response, { parse_mode: "Markdown" });
+    // HTML 모드로 전송
+    await ctx.reply(response, { parse_mode: "HTML" });
   } catch (err: any) {
-    if (err.message?.includes("can't parse entities") && response) {
-      await ctx.reply("⚠️ (Text Mode)\n\n" + response);
+    // HTML 파싱 에러 발생 시, 텍스트 모드로 재전송 (태그 제거 등)
+    if (err.message && (err.message.includes("can't parse entities") || err.message.includes("Bad Request"))) {
+      try {
+        await ctx.reply("⚠️ (포맷 오류로 원본 텍스트 전송)\n\n" + response);
+      } catch (fallbackErr) {
+        await ctx.reply("❌ 응답 전송 실패");
+      }
     } else {
       await ctx.reply(`⚠️ Error: ${err.message}`);
     }

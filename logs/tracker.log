@@ -1,0 +1,8 @@
+HTTP Error 404: {"quoteSummary":{"result":null,"error":{"code":"Not Found","description":"Quote not found for symbol: 009060.KS"}}}
+$009060.KS: possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")
+$009060.KS: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+📈 *투자 트래커 업데이트 완료*
+- 업데이트 종목: 11개
+
+🎯 *태광* 트리거 도달! (현재가: 26,500 / 트리거: 28,500)
+🎯 *휴젤* 트리거 도달! (현재가: 260,000 / 트리거: 280,000)

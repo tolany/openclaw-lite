@@ -37,7 +37,12 @@ export class OpenClawAgent {
           description: "Run automation script.",
           parameters: {
             type: SchemaType.OBJECT,
-            properties: { scriptName: { type: SchemaType.STRING } },
+            properties: { 
+              scriptName: { 
+                type: SchemaType.STRING,
+                description: "Scripts: 'run_scraper.sh' (FnGuide), 'run_tracker.sh' (Stock Prices)"
+              } 
+            },
             required: ["scriptName"]
           }
         }
@@ -46,10 +51,7 @@ export class OpenClawAgent {
   }
 
   private async getModel(modelName: string) {
-    return this.genAI.getGenerativeModel({
-      model: modelName,
-      tools: this.tools
-    });
+    return this.genAI.getGenerativeModel({ model: modelName, tools: this.tools });
   }
 
   private async handleToolCall(call: any): Promise<any> {
@@ -61,10 +63,11 @@ export class OpenClawAgent {
         return { error: "File not found" };
       }
       if (name === "run_script") {
-        if (args.scriptName !== "run_scraper.sh") return { error: "Unauthorized" };
+        const allowed = ["run_scraper.sh", "run_tracker.sh"];
+        if (!allowed.includes(args.scriptName)) return { error: "Unauthorized script" };
         const scriptPath = path.join(this.projectRoot, "scripts", args.scriptName);
         exec(`bash ${scriptPath} &`); 
-        return { message: "Script started in background." };
+        return { message: `${args.scriptName} started in background.` };
       }
     } catch (err: any) {
       return { error: err.message };
@@ -74,25 +77,33 @@ export class OpenClawAgent {
   async chat(message: string, history: any[] = []): Promise<string> {
     const bootstrap = await this.getBootstrapContext();
     const instructions = this.persona.instructions.map((i: string) => `- ${i}`).join("\n");
-    const systemPrompt = `You are '${this.persona.name}'. Role: ${this.persona.role}. Language: ${this.persona.language}\n[Inst]\n${instructions}\n[Context]\n${bootstrap}`;
+    
+    // HTML 모드 지침 추가
+    const systemPrompt = `You are '${this.persona.name}'. Role: ${this.persona.role}. Language: ${this.persona.language}
+    [Formatting Rules]
+    - Use **HTML tags** strictly compatible with Telegram.
+    - Bold: <b>text</b> (Do not use **)
+    - Italic: <i>text</i> (Do not use *)
+    - Code: <code>text</code>
+    - Link: <a href="url">text</a>
+    - Do NOT use Markdown syntax (**, #, [ ]). Only HTML.
+    
+    [Instructions]
+    ${instructions}
+    [Context]
+    ${bootstrap}`;
 
     const geminiHistory = history.map(msg => ({
       role: msg.role === 'assistant' ? 'model' : 'user',
       parts: [{ text: msg.content }]
     }));
 
-    // v10: Flash 중심 고효율 라인업 (Pro 모델 제외)
-    const modelsToTry = [
-      "gemini-3-flash-preview", 
-      "gemini-2.5-flash",
-      "gemini-2.5-flash-lite"
-    ];
+    const targetModel = "gemini-3-flash-preview";
+    const maxRetries = 3;
     
-    let lastError: any = null;
-
-    for (const modelName of modelsToTry) {
+    for (let i = 0; i < maxRetries; i++) {
       try {
-        const model = await this.getModel(modelName);
+        const model = await this.getModel(targetModel);
         const chatSession = model.startChat({ history: geminiHistory });
         const fullMessage = `${systemPrompt}\n\nUser: ${message}`;
         
@@ -107,22 +118,18 @@ export class OpenClawAgent {
             const output = await this.handleToolCall(call.functionCall);
             return { functionResponse: { name: call.functionCall.name, response: output } };
           }));
-          
           result = await chatSession.sendMessage(toolResponses);
           response = await result.response;
-          
           parts = response.candidates?.[0]?.content?.parts || [];
           calls = parts.filter((p: any) => p.functionCall);
         }
         return response.text();
       } catch (err: any) {
-        console.warn(`⚠️ Model ${modelName} failed:`, err.message);
-        lastError = err;
-        continue;
+        if (i === maxRetries - 1) return `❌ Error: ${err.message}`;
+        await new Promise(resolve => setTimeout(resolve, 2000));
       }
     }
-
-    return `❌ All models failed. Quota exceeded or service down.\nError: ${lastError?.message}`;
+    return "❌ System Error";
   }
 
   private async getBootstrapContext(): Promise<string> {
@@ -130,9 +137,7 @@ export class OpenClawAgent {
     let context = "";
     for (const file of filesToLoad) {
       const filePath = path.join(this.vaultPath, file);
-      if (fs.existsSync(filePath)) {
-        context += `\n[${file}]\n${fs.readFileSync(filePath, "utf-8")}\n`;
-      }
+      if (fs.existsSync(filePath)) context += `\n[${file}]\n${fs.readFileSync(filePath, "utf-8")}\n`;
     }
     return context;
   }
