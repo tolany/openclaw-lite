@@ -1,0 +1,10 @@
+
+> openclaw-lite@1.0.0 start
+> node dist/bot.js
+
+[dotenv@17.2.3] injecting env (4) from .env -- tip: ⚙️  suppress all logs with { quiet: true }
+
+> openclaw-lite@1.0.0 start
+> node dist/bot.js
+
+[dotenv@17.2.3] injecting env (5) from .env -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com

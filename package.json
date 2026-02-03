@@ -1,0 +1,39 @@
+{
+  "name": "openclaw-lite",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon --watch 'src/**/*.ts' --exec 'ts-node' src/bot.ts",
+    "build": "tsc",
+    "start": "node dist/bot.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tolany/openclaw-lite.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/tolany/openclaw-lite/issues"
+  },
+  "homepage": "https://github.com/tolany/openclaw-lite#readme",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.72.1",
+    "@google/generative-ai": "^0.24.1",
+    "better-sqlite3": "^12.6.2",
+    "dotenv": "^17.2.3",
+    "grammy": "^1.39.3",
+    "winston": "^3.19.0"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^25.2.0",
+    "nodemon": "^3.1.11",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  }
+}
