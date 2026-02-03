@@ -26,6 +26,7 @@
     "@google/generative-ai": "^0.24.1",
     "better-sqlite3": "^12.6.2",
     "dotenv": "^17.2.3",
+    "glob": "^13.0.1",
     "grammy": "^1.39.3",
     "winston": "^3.19.0"
   },

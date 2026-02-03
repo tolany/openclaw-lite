@@ -2,6 +2,7 @@ import { GoogleGenerativeAI, Tool, SchemaType } from "@google/generative-ai";
 import * as fs from "fs";
 import * as path from "path";
 import { exec } from "child_process";
+import { glob } from "glob";
 
 export class OpenClawAgent {
   private genAI: GoogleGenerativeAI;
@@ -25,26 +26,22 @@ export class OpenClawAgent {
       functionDeclarations: [
         {
           name: "read_file",
-          description: "Read vault file.",
-          parameters: {
-            type: SchemaType.OBJECT,
-            properties: { filePath: { type: SchemaType.STRING } },
-            required: ["filePath"]
+          description: "Read file content.",
+          parameters: { type: SchemaType.OBJECT, properties: { filePath: { type: SchemaType.STRING } }, required: ["filePath"] }
+        },
+        {
+          name: "search_files",
+          description: "Find file paths using keyword (e.g., '**/*keyword*.md'). Use this whenever context is missing.",
+          parameters: { 
+            type: SchemaType.OBJECT, 
+            properties: { pattern: { type: SchemaType.STRING } }, 
+            required: ["pattern"] 
           }
         },
         {
           name: "run_script",
-          description: "Run automation script.",
-          parameters: {
-            type: SchemaType.OBJECT,
-            properties: { 
-              scriptName: { 
-                type: SchemaType.STRING,
-                description: "Scripts: 'run_scraper.sh' (FnGuide), 'run_tracker.sh' (Stock Prices)"
-              } 
-            },
-            required: ["scriptName"]
-          }
+          description: "Run automation.",
+          parameters: { type: SchemaType.OBJECT, properties: { scriptName: { type: SchemaType.STRING } }, required: ["scriptName"] }
         }
       ]
     }];
@@ -62,34 +59,37 @@ export class OpenClawAgent {
         if (fs.existsSync(fullPath)) return { content: fs.readFileSync(fullPath, "utf-8") };
         return { error: "File not found" };
       }
+      if (name === "search_files") {
+        const files = await glob(args.pattern, { cwd: this.vaultPath, nodir: true });
+        return { count: files.length, files: files.slice(0, 10) };
+      }
       if (name === "run_script") {
         const allowed = ["run_scraper.sh", "run_tracker.sh"];
-        if (!allowed.includes(args.scriptName)) return { error: "Unauthorized script" };
+        if (!allowed.includes(args.scriptName)) return { error: "Unauthorized" };
         const scriptPath = path.join(this.projectRoot, "scripts", args.scriptName);
         exec(`bash ${scriptPath} &`); 
-        return { message: `${args.scriptName} started in background.` };
+        return { message: "Script started." };
       }
-    } catch (err: any) {
-      return { error: err.message };
-    }
+    } catch (err: any) { return { error: err.message }; }
   }
 
-  async chat(message: string, history: any[] = []): Promise<string> {
+  private calculateCost(promptTokens: number, candidatesTokens: number): string {
+    const inputPrice = (promptTokens / 1000000) * 0.5 * 1400;
+    const outputPrice = (candidatesTokens / 1000000) * 3.0 * 1400;
+    return (inputPrice + outputPrice).toFixed(1);
+  }
+
+  async chat(message: string, history: any[] = []): Promise<{ text: string, stats: string }> {
     const bootstrap = await this.getBootstrapContext();
-    const instructions = this.persona.instructions.map((i: string) => `- ${i}`).join("\n");
-    
-    // HTML 모드 지침 추가
-    const systemPrompt = `You are '${this.persona.name}'. Role: ${this.persona.role}. Language: ${this.persona.language}
-    [Formatting Rules]
-    - Use **HTML tags** strictly compatible with Telegram.
-    - Bold: <b>text</b> (Do not use **)
-    - Italic: <i>text</i> (Do not use *)
-    - Code: <code>text</code>
-    - Link: <a href="url">text</a>
-    - Do NOT use Markdown syntax (**, #, [ ]). Only HTML.
-    
+    // 프롬프트에 '검색 강제' 지시 추가
+    const systemPrompt = `You are '${this.persona.name}'. 
     [Instructions]
-    ${instructions}
+    ${this.persona.instructions.join("\n")}    
+    [Tool Usage Policy]
+    - If you cannot find the answer in the context, YOU MUST USE 'search_files' tool first.
+    - Do NOT say "I don't know" or "Information not found" without using tools.
+    - Use HTML tags (<b>, <i>, <code>).
+    
     [Context]
     ${bootstrap}`;
 
@@ -98,42 +98,48 @@ export class OpenClawAgent {
       parts: [{ text: msg.content }]
     }));
 
-    const targetModel = "gemini-3-flash-preview";
-    const maxRetries = 3;
-    
-    for (let i = 0; i < maxRetries; i++) {
-      try {
-        const model = await this.getModel(targetModel);
-        const chatSession = model.startChat({ history: geminiHistory });
-        const fullMessage = `${systemPrompt}\n\nUser: ${message}`;
-        
-        let result = await chatSession.sendMessage(fullMessage);
-        let response = await result.response;
-        
-        let parts = response.candidates?.[0]?.content?.parts || [];
-        let calls = parts.filter((p: any) => p.functionCall);
+    const modelsToTry = ["gemini-3-flash-preview", "gemini-2.5-flash"];
+    let lastError: any = null;
 
-        while (calls.length > 0) {
-          const toolResponses = await Promise.all(calls.map(async (call: any) => {
-            const output = await this.handleToolCall(call.functionCall);
-            return { functionResponse: { name: call.functionCall.name, response: output } };
-          }));
-          result = await chatSession.sendMessage(toolResponses);
-          response = await result.response;
-          parts = response.candidates?.[0]?.content?.parts || [];
-          calls = parts.filter((p: any) => p.functionCall);
+    for (const modelName of modelsToTry) {
+      for (let retry = 0; retry < 2; retry++) {
+        try {
+          const model = await this.getModel(modelName);
+          const chatSession = model.startChat({ history: geminiHistory });
+          
+          let result = await chatSession.sendMessage(`${systemPrompt}\n\nUser: ${message}`);
+          let response = await result.response;
+          
+          let parts = response.candidates?.[0]?.content?.parts || [];
+          let calls = parts.filter((p: any) => p.functionCall);
+
+          while (calls.length > 0) {
+            const toolResponses = await Promise.all(calls.map(async (call: any) => {
+              const output = await this.handleToolCall(call.functionCall);
+              return { functionResponse: { name: call.functionCall.name, response: output } };
+            }));
+            result = await chatSession.sendMessage(toolResponses);
+            response = await result.response;
+            parts = response.candidates?.[0]?.content?.parts || [];
+            calls = parts.filter((p: any) => p.functionCall);
+          }
+
+          const usage = response.usageMetadata;
+          const stats = usage ? `[T: ${usage.totalTokenCount} | ${this.calculateCost(usage.promptTokenCount, usage.candidatesTokenCount)}원]` : "";
+          return { text: response.text(), stats };
+
+        } catch (err: any) {
+          lastError = err;
+          if (err.message.includes("429") || err.message.includes("404")) break;
+          await new Promise(resolve => setTimeout(resolve, 1000));
         }
-        return response.text();
-      } catch (err: any) {
-        if (i === maxRetries - 1) return `❌ Error: ${err.message}`;
-        await new Promise(resolve => setTimeout(resolve, 2000));
       }
     }
-    return "❌ System Error";
+    return { text: `❌ All models failed.\nLast Error: ${lastError?.message}`, stats: "" };
   }
 
   private async getBootstrapContext(): Promise<string> {
-    const filesToLoad = ["SOUL.md", "USER.md", "MEMORY.md", "IDENTITY.md"];
+    const filesToLoad = ["SOUL.md", "USER.md", "MEMORY.md"];
     let context = "";
     for (const file of filesToLoad) {
       const filePath = path.join(this.vaultPath, file);
