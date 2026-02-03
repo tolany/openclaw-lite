@@ -8,3 +8,28 @@
 > node dist/bot.js
 
 [dotenv@17.2.3] injecting env (5) from .env -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com
+
+> openclaw-lite@1.0.0 start
+> node dist/bot.js
+
+[dotenv@17.2.3] injecting env (7) from .env -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
+
+> openclaw-lite@1.0.0 start
+> node dist/bot.js
+
+[dotenv@17.2.3] injecting env (7) from .env -- tip: ✅ audit secrets and track compliance: https://dotenvx.com/ops
+
+> openclaw-lite@1.0.0 start
+> node dist/bot.js
+
+[dotenv@17.2.3] injecting env (7) from .env -- tip: 🔄 add secrets lifecycle management: https://dotenvx.com/ops
+
+> openclaw-lite@1.0.0 start
+> node dist/bot.js
+
+[dotenv@17.2.3] injecting env (7) from .env -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
+
+> openclaw-lite@1.0.0 start
+> node dist/bot.js
+
+[dotenv@17.2.3] injecting env (7) from .env -- tip: ⚙️  write to custom object with { processEnv: myObject }
