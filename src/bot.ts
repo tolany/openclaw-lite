@@ -1,6 +1,6 @@
-// OpenClaw Lite - Telegram Bot (v4.0 - Enhanced Features)
+// OpenClaw Lite - Telegram Bot (v4.1 - Streaming & Inline)
 
-import { Bot } from "grammy";
+import { Bot, InlineQueryResultBuilder } from "grammy";
 import * as dotenv from "dotenv";
 import * as path from "path";
 import * as cron from "node-cron";
@@ -39,7 +39,7 @@ bot.use(async (ctx, next) => {
 });
 
 // Commands
-bot.command("start", (ctx) => ctx.reply(`OpenClaw Lite v4.0 [${provider}]`));
+bot.command("start", (ctx) => ctx.reply(`OpenClaw Lite v4.1 [${provider}]\n\n인라인 모드: @봇이름 질문`));
 
 bot.command("clear", async (ctx) => {
   clearHistory(ctx.from!.id);
@@ -161,20 +161,28 @@ function toHtml(text: string): string {
   return html;
 }
 
-// Text message handler
+// Text message handler with streaming UI
 bot.on("message:text", async (ctx) => {
   const userId = ctx.from!.id;
   const userMessage = ctx.message.text;
 
-  try {
-    await ctx.replyWithChatAction("typing");
+  // Send initial "thinking" message
+  const thinkingMsg = await ctx.reply("🔄 생각 중...", { parse_mode: "HTML" });
 
+  try {
     // Set userId for reminder tool
     agent.setUserId(userId);
 
     // Get current topic for context
     const topic = getActiveTopic(userId);
     const history = getHistory(userId, 20);
+
+    // Update to show processing
+    await ctx.api.editMessageText(
+      ctx.chat.id,
+      thinkingMsg.message_id,
+      "⚙️ 처리 중..."
+    );
 
     // Add topic context if exists
     const contextPrefix = topic ? `[현재 토픽: ${topic}]\n` : "";
@@ -185,12 +193,54 @@ bot.on("message:text", async (ctx) => {
     logChat(userId, "user", userMessage);
     logChat(userId, "assistant", text, tokens, stats);
 
-    await ctx.reply(`${toHtml(text)}\n\n<code>${stats}</code>`, { parse_mode: "HTML" });
+    // Update with final response
+    const finalText = `${toHtml(text)}\n\n<code>${stats}</code>`;
+
+    // Telegram has 4096 char limit - split if needed
+    if (finalText.length > 4000) {
+      await ctx.api.deleteMessage(ctx.chat.id, thinkingMsg.message_id);
+      const chunks = splitMessage(finalText, 4000);
+      for (const chunk of chunks) {
+        await ctx.reply(chunk, { parse_mode: "HTML" });
+      }
+    } else {
+      await ctx.api.editMessageText(
+        ctx.chat.id,
+        thinkingMsg.message_id,
+        finalText,
+        { parse_mode: "HTML" }
+      );
+    }
   } catch (err: any) {
     logError("TextHandler", err);
-    await ctx.reply(`Error: ${err.message}`);
+    await ctx.api.editMessageText(
+      ctx.chat.id,
+      thinkingMsg.message_id,
+      `❌ Error: ${err.message}`
+    );
   }
 });
+
+// Split long messages
+function splitMessage(text: string, maxLength: number): string[] {
+  const chunks: string[] = [];
+  let current = text;
+
+  while (current.length > maxLength) {
+    let splitAt = current.lastIndexOf("\n", maxLength);
+    if (splitAt === -1 || splitAt < maxLength / 2) {
+      splitAt = maxLength;
+    }
+    chunks.push(current.substring(0, splitAt));
+    current = current.substring(splitAt).trim();
+  }
+
+  if (current.length > 0) {
+    chunks.push(current);
+  }
+
+  return chunks;
+}
 
 // Image handler (Vision)
 bot.on("message:photo", async (ctx) => {
@@ -225,6 +275,58 @@ bot.on("message:photo", async (ctx) => {
   }
 });
 
+// Inline query handler - @botname query
+bot.on("inline_query", async (ctx) => {
+  const userId = ctx.from.id;
+
+  // Auth check for inline queries
+  if (userId !== ALLOWED_ID) {
+    return ctx.answerInlineQuery([]);
+  }
+
+  const query = ctx.inlineQuery.query.trim();
+
+  if (!query) {
+    // Show help when no query
+    const helpResult = InlineQueryResultBuilder.article(
+      "help",
+      "OpenClaw Lite 도움말"
+    ).text("질문을 입력하면 AI가 답변합니다. 예: @봇이름 삼성전자 현재가");
+
+    return ctx.answerInlineQuery([helpResult], { cache_time: 10 });
+  }
+
+  try {
+    // Set userId
+    agent.setUserId(userId);
+
+    // Quick response without history for inline
+    const { text, stats } = await agent.chat(query, []);
+
+    // Create inline result
+    const result = InlineQueryResultBuilder.article(
+      `result_${Date.now()}`,
+      query.substring(0, 50) + (query.length > 50 ? "..." : "")
+    ).text(`${text}\n\n${stats}`, { parse_mode: "HTML" });
+
+    await ctx.answerInlineQuery([result], { cache_time: 30 });
+
+    // Save to conversation history
+    saveConversation(userId, "user", `[Inline] ${query}`);
+    saveConversation(userId, "assistant", text);
+    logChat(userId, "inline", query);
+  } catch (err: any) {
+    logError("InlineQuery", err);
+
+    const errorResult = InlineQueryResultBuilder.article(
+      "error",
+      "오류 발생"
+    ).text(`Error: ${err.message}`);
+
+    await ctx.answerInlineQuery([errorResult], { cache_time: 5 });
+  }
+});
+
 // Reminder scheduler - check every minute
 cron.schedule("* * * * *", async () => {
   const pendingReminders = getPendingReminders();
@@ -245,4 +347,4 @@ cron.schedule("* * * * *", async () => {
 });
 
 bot.start();
-console.log(`OpenClaw Lite v4.0 started [${provider}]`);
+console.log(`OpenClaw Lite v4.1 started [${provider}] - Streaming & Inline enabled`);

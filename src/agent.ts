@@ -1,4 +1,4 @@
-// OpenClaw Lite - Main Agent (v3.1 - OAuth Token Support)
+// OpenClaw Lite - Main Agent (v4.1 - Streaming & Retry)
 
 import Anthropic from "@anthropic-ai/sdk";
 import { GoogleGenerativeAI } from "@google/generative-ai";
@@ -9,6 +9,40 @@ import { LibrarianTools, JournalistTools, WebTools, UtilityTools, getToolDeclara
 import { logTool, logError } from "./lib/logger";
 import { addReminder } from "./lib/db";
 import { ChatMessage } from "./types";
+
+// Retry configuration
+const MAX_RETRIES = 3;
+const RETRY_DELAYS = [1000, 3000, 5000]; // ms
+
+async function sleep(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function withRetry<T>(
+  fn: () => Promise<T>,
+  context: string
+): Promise<T> {
+  let lastError: Error | null = null;
+
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    try {
+      return await fn();
+    } catch (err: any) {
+      lastError = err;
+      const isRetryable = err.status === 429 || err.status === 500 || err.status === 503 || err.message?.includes("overloaded");
+
+      if (!isRetryable || attempt === MAX_RETRIES - 1) {
+        throw err;
+      }
+
+      const delay = RETRY_DELAYS[attempt];
+      console.log(`[Retry] ${context} failed (attempt ${attempt + 1}/${MAX_RETRIES}), retrying in ${delay}ms...`);
+      await sleep(delay);
+    }
+  }
+
+  throw lastError;
+}
 
 // Anthropic tool schema
 const CLAUDE_TOOLS: Anthropic.Tool[] = [
@@ -196,13 +230,16 @@ ${bootstrap}`;
       : systemPrompt;
 
     try {
-      let response = await this.claudeClient!.messages.create({
-        model: "claude-sonnet-4-20250514",
-        max_tokens: 4096,
-        system: systemParam,
-        tools: CLAUDE_TOOLS,
-        messages
-      });
+      let response = await withRetry(
+        () => this.claudeClient!.messages.create({
+          model: "claude-sonnet-4-20250514",
+          max_tokens: 4096,
+          system: systemParam,
+          tools: CLAUDE_TOOLS,
+          messages
+        }),
+        "Claude API"
+      );
 
       while (response.stop_reason === "tool_use") {
         const toolUseBlocks = response.content.filter((b): b is Anthropic.ToolUseBlock => b.type === "tool_use");
@@ -211,13 +248,16 @@ ${bootstrap}`;
         );
         messages.push({ role: "assistant", content: response.content });
         messages.push({ role: "user", content: toolResults });
-        response = await this.claudeClient!.messages.create({
-          model: "claude-sonnet-4-20250514",
-          max_tokens: 4096,
-          system: systemParam,
-          tools: CLAUDE_TOOLS,
-          messages
-        });
+        response = await withRetry(
+          () => this.claudeClient!.messages.create({
+            model: "claude-sonnet-4-20250514",
+            max_tokens: 4096,
+            system: systemParam,
+            tools: CLAUDE_TOOLS,
+            messages
+          }),
+          "Claude API (tool)"
+        );
       }
 
       const text = response.content.find((b): b is Anthropic.TextBlock => b.type === "text")?.text || "";
@@ -237,7 +277,11 @@ ${bootstrap}`;
     try {
       const model = this.geminiClient!.getGenerativeModel({ model: "gemini-3-flash-preview", tools });
       const chat = model.startChat({ history: geminiHistory });
-      let result = await chat.sendMessage(`${systemPrompt}\n\nUser: ${message}`);
+
+      let result = await withRetry(
+        () => chat.sendMessage(`${systemPrompt}\n\nUser: ${message}`),
+        "Gemini API"
+      );
       let response = await result.response;
 
       let parts = response.candidates?.[0]?.content?.parts || [];
@@ -247,7 +291,10 @@ ${bootstrap}`;
         const toolResponses = await Promise.all(calls.map(async (c: any) => ({
           functionResponse: { name: c.functionCall.name, response: JSON.parse(await this.handleToolCall(c.functionCall.name, c.functionCall.args)) }
         })));
-        result = await chat.sendMessage(toolResponses);
+        result = await withRetry(
+          () => chat.sendMessage(toolResponses),
+          "Gemini API (tool)"
+        );
         response = await result.response;
         parts = response.candidates?.[0]?.content?.parts || [];
         calls = parts.filter((p: any) => p.functionCall);
