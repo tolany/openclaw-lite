@@ -98,6 +98,8 @@ export class OpenClawAgent {
   private claudeClient?: Anthropic;
   private geminiClient?: GoogleGenerativeAI;
   private apiKey: string;
+  private claudeApiKey: string;
+  private geminiApiKey: string;
   private vaultPath: string;
   private persona: any;
   private projectRoot: string;
@@ -117,10 +119,16 @@ export class OpenClawAgent {
     this.vaultPath = vaultPath;
     this.projectRoot = path.dirname(personaPath);
 
-    if (provider === "claude") {
-      this.claudeClient = createAnthropicClient(apiKey);
-    } else {
-      this.geminiClient = new GoogleGenerativeAI(apiKey);
+    // Store both API keys for runtime switching
+    this.claudeApiKey = process.env.ANTHROPIC_API_KEY || "";
+    this.geminiApiKey = geminiApiKey || process.env.GOOGLE_API_KEY || "";
+
+    // Initialize both clients if keys available
+    if (this.claudeApiKey) {
+      this.claudeClient = createAnthropicClient(this.claudeApiKey);
+    }
+    if (this.geminiApiKey) {
+      this.geminiClient = new GoogleGenerativeAI(this.geminiApiKey);
     }
 
     try {
@@ -161,6 +169,42 @@ export class OpenClawAgent {
 
   setUserId(userId: number) {
     this.userId = userId;
+  }
+
+  // Get current provider
+  getProvider(): Provider {
+    return this.provider;
+  }
+
+  // Switch provider at runtime (no restart needed)
+  switchProvider(newProvider: Provider): { success: boolean; message: string } {
+    if (newProvider === this.provider) {
+      return { success: true, message: `이미 ${newProvider} 사용 중` };
+    }
+
+    if (newProvider === "claude") {
+      if (!this.claudeApiKey) {
+        return { success: false, message: "Claude API 키가 설정되지 않음 (ANTHROPIC_API_KEY)" };
+      }
+      if (!this.claudeClient) {
+        this.claudeClient = createAnthropicClient(this.claudeApiKey);
+      }
+      this.provider = "claude";
+      this.apiKey = this.claudeApiKey;
+      console.log("[Agent] Switched to Claude");
+      return { success: true, message: "Claude로 전환됨 ✓" };
+    } else {
+      if (!this.geminiApiKey) {
+        return { success: false, message: "Gemini API 키가 설정되지 않음 (GOOGLE_API_KEY)" };
+      }
+      if (!this.geminiClient) {
+        this.geminiClient = new GoogleGenerativeAI(this.geminiApiKey);
+      }
+      this.provider = "gemini";
+      this.apiKey = this.geminiApiKey;
+      console.log("[Agent] Switched to Gemini");
+      return { success: true, message: "Gemini로 전환됨 ✓" };
+    }
   }
 
   private parseRelativeTime(timeStr: string): Date {

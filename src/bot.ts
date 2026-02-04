@@ -42,7 +42,7 @@ bot.use(async (ctx, next) => {
 });
 
 // Commands
-bot.command("start", (ctx) => ctx.reply(`OpenClaw Lite v4.1 [${provider}]\n\n인라인 모드: @봇이름 질문`));
+bot.command("start", (ctx) => ctx.reply(`OpenClaw Lite v4.1 [${agent.getProvider()}]\n\n인라인 모드: @봇이름 질문\nProvider 전환: /provider`));
 
 bot.command("clear", async (ctx) => {
   clearHistory(ctx.from!.id);
@@ -55,6 +55,33 @@ bot.command("stats", async (ctx) => {
   if (!stats.length) return ctx.reply("No usage data.");
   const lines = stats.map((s: any) => `${s.date}: ${s.total_messages}msg, ${s.total_tokens}T, ${s.total_cost?.toFixed(1)}원`);
   ctx.reply(`<b>Usage (7 days)</b>\n<code>${lines.join("\n")}</code>`, { parse_mode: "HTML" });
+});
+
+// Provider switching (runtime, no restart needed)
+bot.command("provider", async (ctx) => {
+  const args = ctx.message?.text?.split(" ").slice(1).join(" ").trim().toLowerCase() || "";
+  const current = agent.getProvider();
+
+  if (!args) {
+    return ctx.reply(
+      `<b>🤖 현재 Provider</b>: ${current}\n\n` +
+      `<b>전환 명령어</b>\n` +
+      `<code>/provider gemini</code> - Gemini로 전환 (저렴)\n` +
+      `<code>/provider claude</code> - Claude로 전환 (고품질)`,
+      { parse_mode: "HTML" }
+    );
+  }
+
+  if (args !== "claude" && args !== "gemini") {
+    return ctx.reply("❌ 유효한 provider: claude 또는 gemini");
+  }
+
+  const result = agent.switchProvider(args as "claude" | "gemini");
+  if (result.success) {
+    ctx.reply(`✅ ${result.message}\n\n현재 Provider: <b>${agent.getProvider()}</b>`, { parse_mode: "HTML" });
+  } else {
+    ctx.reply(`❌ ${result.message}`);
+  }
 });
 
 // Cost command - monthly breakdown

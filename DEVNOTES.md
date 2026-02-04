@@ -159,6 +159,22 @@ BRAVE_API_KEY=xxx
 
 ---
 
+### 5. /provider 명령어 추가 (NEW)
+런타임에서 Provider 전환 가능 (재시작 불필요)
+
+```
+/provider         # 현재 상태 확인
+/provider gemini  # Gemini로 전환
+/provider claude  # Claude로 전환
+```
+
+**구현 내용**:
+- `agent.ts`: `switchProvider()`, `getProvider()` 메서드 추가
+- `bot.ts`: `/provider` 명령어 추가
+- 양쪽 API 키가 있으면 즉시 전환 가능
+
+---
+
 ## 자주 쓰는 명령어
 
 ```bash
