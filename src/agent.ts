@@ -320,60 +320,101 @@ ${bootstrap}
 • journal_memory: 중요한 내용 저장`;
   }
 
-  // Detect if message is information sharing (news, earnings, deals)
-  private isInformationSharing(message: string): boolean {
+  // Detect if message needs context search (expanded criteria)
+  private needsContextSearch(message: string): boolean {
+    // Skip very short messages (greetings, commands)
+    if (message.length < 30) return false;
+
     const patterns = [
-      /실적|earnings|매출|GPM|OPM|NIM|beat|miss/i,
-      /PE Deals|VC Deals|M&A|인수|투자|exit/i,
-      /트럼프|정책|규제|법안/i,
+      // 실적/재무
+      /실적|earnings|매출|GPM|OPM|NIM|beat|miss|어닝/i,
+      // 투자/딜
+      /PE Deals|VC Deals|M&A|인수|투자|exit|딜|투심/i,
+      // 정책/시장
+      /트럼프|정책|규제|법안|금리|연준|Fed/i,
+      // 섹터
       /섹터|업종|테마|주도주/i,
-      /Anthropic|OpenAI|Claude|GPT|AI/i,
-      /원전|반도체|메모리|네트워킹|광물/i,
-      /https?:\/\//,  // URL sharing
-      /요약|핵심|주요/,
+      // AI 관련
+      /Anthropic|OpenAI|Claude|GPT|AI|LLM/i,
+      // 산업
+      /원전|반도체|메모리|네트워킹|광물|전력|SMR|HBM/i,
+      // 개인투자 키워드
+      /파마|하이닉스|삼성|APR|포트폴리오|매수|매도|트래커/i,
+      // 커리어
+      /이직|면접|이력서|연봉|커리어/i,
+      // URL/리포트 공유
+      /https?:\/\//,
+      /요약|핵심|주요|리포트|분석/,
     ];
-    return patterns.some(p => p.test(message)) && message.length > 100;
+    return patterns.some(p => p.test(message));
   }
 
-  // Extract search keywords from message
+  // Extract search keywords from message (enhanced)
   private extractSearchKeywords(message: string): string[] {
     const keywords: string[] = [];
 
     // Company/stock names (Korean and English)
-    const companyMatches = message.match(/[A-Z][a-z]+(?:\s[A-Z][a-z]+)*|[가-힣]+(?:전자|반도체|에너지|원전|바이오)/g);
-    if (companyMatches) keywords.push(...companyMatches.slice(0, 3));
-
-    // Sector keywords
-    const sectors = ['메모리', '반도체', '원전', 'AI', '소프트웨어', '헬스케어', '바이오', '광통신', 'SMR'];
-    sectors.forEach(s => {
-      if (message.includes(s)) keywords.push(s);
+    const companyPatterns = [
+      /파마리서치|SK하이닉스|삼성전자|APR|TSMC|엔비디아|NVIDIA/gi,
+      /[A-Z][a-z]+(?:\s[A-Z][a-z]+)*/g,
+      /[가-힣]+(?:전자|반도체|에너지|원전|바이오|제약)/g
+    ];
+    companyPatterns.forEach(p => {
+      const matches = message.match(p);
+      if (matches) keywords.push(...matches.slice(0, 2));
     });
 
-    return [...new Set(keywords)].slice(0, 3);
+    // Sector keywords
+    const sectors = ['메모리', '반도체', '원전', 'AI', '소프트웨어', '헬스케어', '바이오', '광통신', 'SMR', 'HBM', '전력', 'SaaS'];
+    sectors.forEach(s => {
+      if (message.toLowerCase().includes(s.toLowerCase())) keywords.push(s);
+    });
+
+    // Deal/investment keywords
+    const dealKeywords = ['투자', '딜', 'M&A', '인수', '투심'];
+    dealKeywords.forEach(k => {
+      if (message.includes(k)) keywords.push(k);
+    });
+
+    return [...new Set(keywords)].slice(0, 5);
   }
 
   async chat(message: string, history: ChatMessage[] = [], onChunk?: (text: string) => void): Promise<{ text: string; stats: string; tokens: number; cost: number }> {
     let contextPrefix = "";
 
-    // Auto-search for information sharing messages
-    if (this.isInformationSharing(message)) {
+    // Auto-search for messages that need context
+    if (this.needsContextSearch(message)) {
       const keywords = this.extractSearchKeywords(message);
       if (keywords.length > 0) {
         try {
           // Search tracker and portfolio
-          const searchResult = await this.vectorDB.search(keywords.join(" "), 5);
+          const searchResult = await this.vectorDB.search(keywords.join(" "), 7);
           const results = searchResult?.results || [];
           if (results.length > 0) {
             const relevantDocs = results
-              .filter((r: any) => r.score > 0.3)
-              .map((r: any) => `• ${r.title || r.filePath}: ${r.preview || ''}`.slice(0, 200))
+              .filter((r: any) => r.score > 0.25)
+              .map((r: any) => {
+                const title = r.title || r.filePath?.split('/').pop() || 'Unknown';
+                const preview = (r.preview || '').slice(0, 150);
+                return `• ${title}: ${preview}`;
+              })
               .join("\n");
             if (relevantDocs) {
-              contextPrefix = `[자동 검색 결과 - 관련 문서]\n${relevantDocs}\n\n위 검색 결과를 참고하여 사용자의 포트폴리오/트래커와 연결점을 찾아 응답하세요.\n\n[사용자 메시지]\n`;
+              contextPrefix = `[🔍 볼트 검색 결과 - 키워드: ${keywords.join(", ")}]
+${relevantDocs}
+
+⚠️ 위 검색 결과와 사용자의 포트폴리오/트래커/진행 중인 딜과 연결점을 찾아서 응답하세요.
+- 그냥 요약하지 마세요
+- 관련 종목이 있으면 언급하세요
+- 이전에 다룬 내용이면 "어제/아까 정리한 거예요" 라고 하세요
+
+[사용자 메시지]
+`;
             }
           }
         } catch (e) {
           // Ignore search errors, proceed without context
+          console.log("[AutoSearch] Error:", e);
         }
       }
     }
@@ -412,43 +453,56 @@ ${bootstrap}
     let totalOutputTokens = 0;
 
     try {
-      let response = await withRetry(
-        () => this.openaiClient!.chat.completions.create({
-          model: "gpt-4o-mini",
-          messages,
-          tools: OPENAI_TOOLS,
-          tool_choice: "auto",
-          stream: true,
-          stream_options: { include_usage: true }
-        }),
-        "OpenAI API"
-      );
-
       let fullText = "";
-      let toolCalls: any[] = [];
+      const MAX_TOOL_TURNS = 5; // ReAct loop limit
+      let toolTurns = 0;
 
-      for await (const chunk of response) {
-        const delta = chunk.choices[0]?.delta;
-        if (delta?.content) {
-          fullText += delta.content;
-          if (onChunk) onChunk(fullText);
-        }
-        if (delta?.tool_calls) {
-          for (const tc of delta.tool_calls) {
-            if (!toolCalls[tc.index]) toolCalls[tc.index] = { id: tc.id, function: { name: "", arguments: "" } };
-            if (tc.id) toolCalls[tc.index].id = tc.id;
-            if (tc.function?.name) toolCalls[tc.index].function.name += tc.function.name;
-            if (tc.function?.arguments) toolCalls[tc.index].function.arguments += tc.function.arguments;
+      // ReAct Loop for OpenAI
+      while (toolTurns < MAX_TOOL_TURNS) {
+        let toolCalls: any[] = [];
+
+        const response = await withRetry(
+          () => this.openaiClient!.chat.completions.create({
+            model: "gpt-4o-mini",
+            messages,
+            tools: OPENAI_TOOLS,
+            tool_choice: "auto",
+            stream: true,
+            stream_options: { include_usage: true }
+          }),
+          `OpenAI API (turn ${toolTurns + 1})`
+        );
+
+        fullText = "";
+        for await (const chunk of response) {
+          const delta = chunk.choices[0]?.delta;
+          if (delta?.content) {
+            fullText += delta.content;
+            if (onChunk) onChunk(fullText);
+          }
+          if (delta?.tool_calls) {
+            for (const tc of delta.tool_calls) {
+              if (!toolCalls[tc.index]) toolCalls[tc.index] = { id: tc.id, function: { name: "", arguments: "" } };
+              if (tc.id) toolCalls[tc.index].id = tc.id;
+              if (tc.function?.name) toolCalls[tc.index].function.name += tc.function.name;
+              if (tc.function?.arguments) toolCalls[tc.index].function.arguments += tc.function.arguments;
+            }
+          }
+          if (chunk.usage) {
+            totalInputTokens += chunk.usage.prompt_tokens;
+            totalOutputTokens += chunk.usage.completion_tokens;
           }
         }
-        // Capture usage from final chunk
-        if (chunk.usage) {
-          totalInputTokens += chunk.usage.prompt_tokens;
-          totalOutputTokens += chunk.usage.completion_tokens;
-        }
-      }
 
-      if (toolCalls.length > 0) {
+        // If no tool calls, we're done
+        if (toolCalls.length === 0) {
+          break;
+        }
+
+        // Execute tools and continue loop
+        toolTurns++;
+        console.log(`[ReAct-OpenAI] Turn ${toolTurns}: ${toolCalls.map(tc => tc.function.name).join(", ")}`);
+
         const assistantMessage: OpenAI.Chat.ChatCompletionAssistantMessageParam = {
           role: "assistant",
           tool_calls: toolCalls.map(tc => ({
@@ -467,29 +521,10 @@ ${bootstrap}
             content: result
           });
         }
+      }
 
-        const secondResponse = await withRetry(
-          () => this.openaiClient!.chat.completions.create({
-            model: "gpt-4o-mini",
-            messages,
-            stream: true,
-            stream_options: { include_usage: true }
-          }),
-          "OpenAI API (tool)"
-        );
-
-        fullText = "";
-        for await (const chunk of secondResponse) {
-          const content = chunk.choices[0]?.delta?.content;
-          if (content) {
-            fullText += content;
-            if (onChunk) onChunk(fullText);
-          }
-          if (chunk.usage) {
-            totalInputTokens += chunk.usage.prompt_tokens;
-            totalOutputTokens += chunk.usage.completion_tokens;
-          }
-        }
+      if (toolTurns >= MAX_TOOL_TURNS) {
+        console.log(`[ReAct-OpenAI] Reached max turns (${MAX_TOOL_TURNS})`);
       }
 
       const tokens = totalInputTokens + totalOutputTokens;
@@ -525,56 +560,28 @@ ${bootstrap}
 
     try {
       let fullText = "";
-      let currentToolUse: any = null;
+      const MAX_TOOL_TURNS = 5; // ReAct loop limit
+      let toolTurns = 0;
 
-      const stream = await withRetry(
-        () => this.claudeClient!.messages.create({
-          model: "claude-sonnet-4-20250514",
-          max_tokens: 4096,
-          system: systemParam,
-          tools: CLAUDE_TOOLS,
-          messages,
-          stream: true
-        }),
-        "Claude API"
-      );
+      // ReAct Loop: Reasoning -> Action -> Observation -> Repeat
+      while (toolTurns < MAX_TOOL_TURNS) {
+        let currentToolUse: any = null;
+        let hasToolCall = false;
 
-      for await (const event of stream) {
-        if (event.type === "message_start" && event.message.usage) {
-          totalInputTokens += event.message.usage.input_tokens;
-        } else if (event.type === "message_delta" && (event as any).usage) {
-          totalOutputTokens += (event as any).usage.output_tokens;
-        } else if (event.type === "content_block_delta" && event.delta.type === "text_delta") {
-          fullText += event.delta.text;
-          if (onChunk) onChunk(fullText);
-        } else if (event.type === "content_block_start" && event.content_block.type === "tool_use") {
-          currentToolUse = event.content_block;
-          currentToolUse.input = "";
-        } else if (event.type === "content_block_delta" && event.delta.type === "input_json_delta") {
-          currentToolUse.input += event.delta.partial_json;
-        }
-      }
-
-      if (currentToolUse) {
-        const input = JSON.parse(currentToolUse.input);
-        const result = await this.handleToolCall(currentToolUse.name, input);
-
-        messages.push({ role: "assistant", content: [{ type: "tool_use", id: currentToolUse.id, name: currentToolUse.name, input }] });
-        messages.push({ role: "user", content: [{ type: "tool_result", tool_use_id: currentToolUse.id, content: result }] });
-
-        const secondStream = await withRetry(
+        const stream = await withRetry(
           () => this.claudeClient!.messages.create({
             model: "claude-sonnet-4-20250514",
             max_tokens: 4096,
             system: systemParam,
+            tools: CLAUDE_TOOLS,
             messages,
             stream: true
           }),
-          "Claude API (tool)"
+          `Claude API (turn ${toolTurns + 1})`
         );
 
         fullText = "";
-        for await (const event of secondStream) {
+        for await (const event of stream) {
           if (event.type === "message_start" && event.message.usage) {
             totalInputTokens += event.message.usage.input_tokens;
           } else if (event.type === "message_delta" && (event as any).usage) {
@@ -582,8 +589,33 @@ ${bootstrap}
           } else if (event.type === "content_block_delta" && event.delta.type === "text_delta") {
             fullText += event.delta.text;
             if (onChunk) onChunk(fullText);
+          } else if (event.type === "content_block_start" && event.content_block.type === "tool_use") {
+            currentToolUse = event.content_block;
+            currentToolUse.input = "";
+            hasToolCall = true;
+          } else if (event.type === "content_block_delta" && event.delta.type === "input_json_delta") {
+            currentToolUse.input += event.delta.partial_json;
           }
         }
+
+        // If no tool call, we're done
+        if (!hasToolCall || !currentToolUse) {
+          break;
+        }
+
+        // Execute tool and continue loop
+        toolTurns++;
+        const input = JSON.parse(currentToolUse.input);
+        const result = await this.handleToolCall(currentToolUse.name, input);
+
+        console.log(`[ReAct] Turn ${toolTurns}: ${currentToolUse.name}`);
+
+        messages.push({ role: "assistant", content: [{ type: "tool_use", id: currentToolUse.id, name: currentToolUse.name, input }] });
+        messages.push({ role: "user", content: [{ type: "tool_result", tool_use_id: currentToolUse.id, content: result }] });
+      }
+
+      if (toolTurns >= MAX_TOOL_TURNS) {
+        console.log(`[ReAct] Reached max turns (${MAX_TOOL_TURNS})`);
       }
 
       const tokens = totalInputTokens + totalOutputTokens;
