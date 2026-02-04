@@ -218,17 +218,17 @@ function textToHtml(text: string): string {
     .replace(/\n{3,}/g, "\n\n");
 }
 
-// Scheduled Jobs
-cron.schedule("0 9,21 * * *", () => {
-  bot.api.sendMessage(ALLOWED_ID, "📊 FnGuide 스캔 시작...").catch(() => {});
-  exec(`bash ${path.join(__dirname, "../scripts/run_scraper.sh")}`);
-}, { timezone: "Asia/Seoul" });
+// Scheduled Jobs (DISABLED - using original OpenClaw for cron)
+// cron.schedule("0 9,21 * * *", () => {
+//   bot.api.sendMessage(ALLOWED_ID, "📊 FnGuide 스캔 시작...").catch(() => {});
+//   exec(`bash ${path.join(__dirname, "../scripts/run_scraper.sh")}`);
+// }, { timezone: "Asia/Seoul" });
 
-cron.schedule("0 11,16 * * 1-5", async () => {
-  if (agent) {
-    const { text } = await agent.chat("투자아이디어 트래커 현재가 업데이트 진행하고 주요 변동 알려줘.", []);
-    bot.api.sendMessage(ALLOWED_ID, `📊 <b>트래커 업데이트</b>\n\n${textToHtml(text)}`, { parse_mode: "HTML" }).catch(() => {});
-  }
-}, { timezone: "Asia/Seoul" });
+// cron.schedule("0 11,16 * * 1-5", async () => {
+//   if (agent) {
+//     const { text } = await agent.chat("투자아이디어 트래커 현재가 업데이트 진행하고 주요 변동 알려줘.", []);
+//     bot.api.sendMessage(ALLOWED_ID, `📊 <b>트래커 업데이트</b>\n\n${textToHtml(text)}`, { parse_mode: "HTML" }).catch(() => {});
+//   }
+// }, { timezone: "Asia/Seoul" });
 
-console.log("OpenClaw Lite v5.0 Integrated Engine Scheduled.");
+console.log("OpenClaw Lite v5.0 - Cron DISABLED (backup mode)");

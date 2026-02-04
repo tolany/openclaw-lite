@@ -295,20 +295,41 @@ export class OpenClawAgent {
       : "";
 
     // All personal info comes from bootstrap (SOUL.md, USER.md, memory/)
-    // persona.json only has generic assistant config
-    return `${claudeCodePrefix}You are '${personaName}', ${userName}의 파트너.
+    return `${claudeCodePrefix}You are '${personaName}', ${userName}의 투자 파트너.
+
+# Project Context
+The following project context files have been loaded:
+If SOUL.md is present, embody its persona and tone. Avoid stiff, generic replies; follow its guidance.
 
 ${bootstrap}
 
-[응답 스타일]
-${responseStyle ? `• ${responseStyle}` : "• 핵심만 간결하게"}
+## Memory Recall (mandatory)
+Before answering anything about investments, stocks, deals, sectors, or prior work:
+1. Run semantic_search with relevant keywords
+2. Check results for tracker/portfolio matches
+3. Connect the information to user's holdings
 
-[도구 사용]
-${toolsGuidance || "• 답변 전 관련 정보가 있으면 검색"}
+If search returns nothing relevant, mention you checked.
 
-[포맷]
-• 존댓말 사용
-• 텔레그램용: 마크다운 헤더 → <b>제목</b>`;
+## Response Rules (mandatory)
+After searching, your response MUST include:
+1. **Connection**: Link to tracker/portfolio/prior conversation
+   - "트래커에 있는 XX랑 관련 있어요"
+   - "어제 정리한 XX 테마예요"
+   - "보유 중인 XX에 영향 있을 수 있어요"
+
+2. **Insight**: Your opinion/analysis (1 line)
+   - "밸류에이션이 좀 부담스럽네요"
+   - "근데 경쟁 심화가 걱정돼요"
+
+## Forbidden
+- ❌ Generic summaries without connection
+- ❌ "추가 궁금한 점이 있으면" / "도움이 되셨으면"
+- ❌ Responding without searching first
+
+## Format
+- 존댓말
+- Telegram HTML: <b>bold</b>, avoid markdown headers`;
   }
 
   // Detect if message needs context search (expanded criteria)
@@ -344,42 +365,58 @@ ${toolsGuidance || "• 답변 전 관련 정보가 있으면 검색"}
   private extractSearchKeywords(message: string): string[] {
     const keywords: string[] = [];
 
-    // Company/stock names (Korean and English)
-    const companyPatterns = [
-      /파마리서치|SK하이닉스|삼성전자|APR|TSMC|엔비디아|NVIDIA/gi,
-      /[A-Z][a-z]+(?:\s[A-Z][a-z]+)*/g,
-      /[가-힣]+(?:전자|반도체|에너지|원전|바이오|제약)/g
+    // Korean company names (2-6 characters ending with common suffixes)
+    const koreanCompanyPattern = /[가-힣]{2,6}(?:케미칼|전자|반도체|에너지|화학|바이오|제약|건설|중공업|금융|증권|보험|은행|카드|리서치|소재)/g;
+    const koreanMatches = message.match(koreanCompanyPattern);
+    if (koreanMatches) keywords.push(...koreanMatches);
+
+    // Known company names
+    const knownCompanies = [
+      '롯데케미칼', '삼성전자', 'SK하이닉스', '파마리서치', 'APR', 'TSMC', '엔비디아',
+      '현대차', '기아', 'LG에너지솔루션', '삼성바이오', '셀트리온', '카카오', '네이버',
+      '두산에너빌리티', '한전', '한전기술', '효성중공업', '롯데정밀화학', '롯데첨단소재'
     ];
-    companyPatterns.forEach(p => {
-      const matches = message.match(p);
-      if (matches) keywords.push(...matches.slice(0, 2));
+    knownCompanies.forEach(company => {
+      if (message.includes(company)) keywords.push(company);
     });
 
     // Sector keywords
-    const sectors = ['메모리', '반도체', '원전', 'AI', '소프트웨어', '헬스케어', '바이오', '광통신', 'SMR', 'HBM', '전력', 'SaaS'];
+    const sectors = [
+      '메모리', '반도체', '원전', 'AI', '소프트웨어', '헬스케어', '바이오', '광통신',
+      'SMR', 'HBM', '전력', 'SaaS', '석유화학', '정유', '화학', '2차전지', '배터리',
+      '자동차', '조선', '건설', '금융', '보험', '통신', '미디어', '게임', '엔터'
+    ];
     sectors.forEach(s => {
-      if (message.toLowerCase().includes(s.toLowerCase())) keywords.push(s);
+      if (message.includes(s)) keywords.push(s);
     });
 
     // Deal/investment keywords
-    const dealKeywords = ['투자', '딜', 'M&A', '인수', '투심'];
+    const dealKeywords = ['투자', '딜', 'M&A', '인수', '투심', '실적', '어닝', '매출', '영업이익'];
     dealKeywords.forEach(k => {
       if (message.includes(k)) keywords.push(k);
     });
 
-    return [...new Set(keywords)].slice(0, 5);
+    // Remove duplicates and return top 5
+    const unique = [...new Set(keywords)];
+    console.log(`[AutoSearch] extracted: ${unique.join(", ")}`);
+    return unique.slice(0, 5);
   }
 
   async chat(message: string, history: ChatMessage[] = [], onChunk?: (text: string) => void): Promise<{ text: string; stats: string; tokens: number; cost: number }> {
     let contextPrefix = "";
 
     // Auto-search for messages that need context
-    if (this.needsContextSearch(message)) {
+    const needsSearch = this.needsContextSearch(message);
+    console.log(`[AutoSearch] needsSearch=${needsSearch}, msgLen=${message.length}`);
+
+    if (needsSearch) {
       const keywords = this.extractSearchKeywords(message);
+      console.log(`[AutoSearch] keywords=${keywords.join(", ")}`);
       if (keywords.length > 0) {
         try {
           // Search tracker and portfolio
           const searchResult = await this.vectorDB.search(keywords.join(" "), 10);
+          console.log(`[AutoSearch] results=${searchResult?.results?.length || 0}`);
           const results = searchResult?.results || [];
 
           if (results.length > 0) {
@@ -550,7 +587,7 @@ ${relevantDocs}
     }));
     messages.push({ role: "user", content: message });
 
-    // Claude Sonnet 4 pricing (per 1M tokens)
+    // Claude Sonnet 4.5 pricing (per 1M tokens)
     const INPUT_PRICE = 3.0;   // $3/1M input
     const OUTPUT_PRICE = 15.0; // $15/1M output
     const KRW_RATE = 1450;     // USD to KRW
@@ -577,7 +614,7 @@ ${relevantDocs}
 
         const stream = await withRetry(
           () => this.claudeClient!.messages.create({
-            model: "claude-sonnet-4-20250514",
+            model: "claude-sonnet-4-5-20250929",
             max_tokens: 4096,
             system: systemParam,
             tools: CLAUDE_TOOLS,
@@ -703,10 +740,10 @@ ${relevantDocs}
     const KRW_RATE = 1450;
 
     if (this.provider === "claude") {
-      // Claude Sonnet 4: $3/1M input, $15/1M output
+      // Claude Sonnet 4.5: $3/1M input, $15/1M output
       try {
         const response = await this.claudeClient!.messages.create({
-          model: "claude-sonnet-4-20250514", max_tokens: 4096, system: systemPrompt,
+          model: "claude-sonnet-4-5-20250929", max_tokens: 4096, system: systemPrompt,
           messages: [{ role: "user", content: [
             { type: "image", source: { type: "base64", media_type: mimeType as any, data: imageBuffer.toString("base64") } },
             { type: "text", text: message }

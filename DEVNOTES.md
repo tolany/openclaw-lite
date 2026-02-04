@@ -4,20 +4,55 @@
 
 ---
 
-## 현재 상태 (2026-02-04)
+## 현재 상태 (2026-02-05)
 
 ### 버전
-- **OpenClaw Lite v4.7** (Full Migration 완료)
-- **기능**: GraphRAG + VectorRAG + Streaming + Smart Routing + **Auto Cron Jobs**
+- **OpenClaw Lite v5.0** (Backup Mode)
+- **기능**: GraphRAG + VectorRAG + Streaming + Claude Sonnet 4.5
+- **역할**: 원본 OpenClaw의 백업용 (Claude Max 한도 소진 시 사용)
 
 ### 활성 Provider
-- **Auto (Smart Routing)**: 기본 모드. OpenAI/Claude 자동 전환 ✅
-- **OpenAI (GPT-4o-mini)**: 일상 대화, 크론 작업 판단, 단순 요약용
-- **Claude (Sonnet 3.5)**: 심층 투자 분석, 복잡한 추론용
+- **Claude Sonnet 4.5** (`claude-sonnet-4-5-20250929`): 기본 모델
+- **비용**: ~120원/응답 (Pay-as-you-go)
+
+### 듀얼 봇 운영 전략
+| 봇 | 용도 | 모델 | 비용 | Cron |
+|---|---|---|---|---|
+| @tolanybot (원본) | 메인 | Claude Sonnet 4.5 | Claude Max 구독 내 | ✅ 활성 |
+| @tolanylitebot (Lite) | 백업 | Claude Sonnet 4.5 | ~120원/응답 | ❌ 비활성 |
+
+**운영 방식**:
+1. 평소에는 원본(@tolanybot)으로 Claude Max 구독 내에서 무료 사용
+2. Claude Max 한도 임박 시 Lite(@tolanylitebot)로 전환하여 pay-as-you-go로 사용
+3. Cron 작업은 원본에서만 실행 (중복 방지)
 
 ---
 
-## 오늘의 주요 변경사항 (2026-02-04)
+## 주요 변경사항 (2026-02-05)
+
+### 12. 백업 모드 전환 및 Claude Sonnet 4.5 적용
+**목적**: 원본 OpenClaw와의 듀얼 봇 운영을 위한 백업 모드 전환
+**구현 내용**:
+- **모델 변경**: GPT-4o-mini/Auto → Claude Sonnet 4.5 고정
+  - 모델 ID: `claude-sonnet-4-5-20250929`
+  - 비용: $3/1M input, $15/1M output (~120원/응답)
+- **Cron 비활성화**: 원본과의 중복 실행 방지
+  - FnGuide 스캔 (09:00, 21:00) - 비활성
+  - 트래커 업데이트 (11:00, 16:00) - 비활성
+- **비용 계산 수정**: Sonnet 가격 기준으로 원화 환산 로직 업데이트
+
+### 모델 비교 테스트 결과
+| 모델 | 비용 | 품질 |
+|---|---|---|
+| GPT-4o-mini | ~40원 | 단순 요약 수준 |
+| Claude Sonnet | ~120원 | 90% OPM 이상 감지 + 정상화 실적 추정 |
+| Claude Opus | ~660원 | Sonnet과 유사한 품질 |
+
+**결론**: Sonnet이 가성비 최고 (Opus의 1/5 비용, 유사 품질)
+
+---
+
+## 이전 변경사항 (2026-02-04)
 
 ### 10. OpenClaw 핵심 기능 완전 이식 (v4.7) 🚀
 **목적**: 기존 대형 OpenClaw 시스템을 Lite 버전으로 완전 통합 및 대체
