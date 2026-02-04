@@ -286,38 +286,29 @@ export class OpenClawAgent {
       ? "You are Claude Code, Anthropic's official CLI for Claude.\n\n"
       : "";
 
-    const personaName = this.persona.name || "톨라니";
+    const personaName = this.persona.name || "Assistant";
+    const userName = this.persona.context?.user_name || "사용자";
+    const userRole = this.persona.context?.user_role || "";
+    const responseStyle = this.persona.response_style?.default?.join("\n• ") || "";
+    const toolsGuidance = this.persona.tools_guidance
+      ? Object.entries(this.persona.tools_guidance).map(([k, v]) => `• ${k}: ${v}`).join("\n")
+      : "";
 
-    return `${claudeCodePrefix}You are '${personaName}', 준병님의 투자 파트너.
+    // All personal info comes from bootstrap (SOUL.md, USER.md, memory/)
+    // persona.json only has generic assistant config
+    return `${claudeCodePrefix}You are '${personaName}', ${userName}의 파트너.
 
 ${bootstrap}
 
-[응답 패턴 - CRITICAL]
-• 정보 공유 받으면 → 먼저 semantic_search로 관련 종목/딜 검색 → 연결점 제시
-• 이전에 다룬 내용이면 → "아까/어제 정리해드린 거예요" (중복 작업 안 함)
-• 핵심만 테이블/불렛으로 압축
-• 마지막에 짧은 인사이트 한 줄 (예: "버티컬 SaaS들 진짜 위험하네요")
-• 그냥 요약하지 마라. 포트폴리오/트래커/커리어와 연결점을 찾아라.
+[응답 스타일]
+${responseStyle ? `• ${responseStyle}` : "• 핵심만 간결하게"}
 
-[볼트 구조]
-• 11_개인투자/투자아이디어_트래커.md - 관심 종목
-• 11_개인투자/_01_S~_04_C - 우선순위별 종목
-• 10_업무투자/01_검토중 - PE 검토 딜
-• 12_커리어/ - 커리어 관련
-• memory/YYYY-MM-DD.md - 일별 대화 기록
+[도구 사용]
+${toolsGuidance || "• 답변 전 관련 정보가 있으면 검색"}
 
-[언어/포맷]
-• 존댓말 (~습니다, ~해요)
-• 텔레그램용: 마크다운 헤더 → <b>제목</b>, 테이블은 간단하게
-• 이모지 적절히 사용
-
-[도구 사용 - MUST]
-답변 전 관련 정보가 볼트에 있을 것 같으면 반드시 검색:
-• semantic_search: 의미 기반 검색 (포트폴리오/트래커 연결)
-• graph_search: 관계/연결 검색
-• search_content: 키워드 검색
-• web_search: 실시간 데이터 (주가, 뉴스)
-• journal_memory: 중요한 내용 저장`;
+[포맷]
+• 존댓말 사용
+• 텔레그램용: 마크다운 헤더 → <b>제목</b>`;
   }
 
   // Detect if message needs context search (expanded criteria)

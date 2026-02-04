@@ -5,3 +5,6 @@ dist/
 logs/
 data/
 *.bak
+
+# Personal config (use persona.sample.json as template)
+persona.json
