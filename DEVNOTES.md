@@ -159,7 +159,14 @@ BRAVE_API_KEY=xxx
 
 ---
 
-### 5. /provider 명령어 추가 (NEW)
+### 5. Claude Haiku로 변경 (NEW)
+- Sonnet → Haiku 3.5 변경 (claude-3-5-haiku-20241022)
+- 비용: Sonnet의 **1/12** 수준
+  - 입력: $3 → $0.25 / 1M
+  - 출력: $15 → $1.25 / 1M
+- 성능: 단순 비서 용도로 충분
+
+### 6. /provider 명령어 추가
 런타임에서 Provider 전환 가능 (재시작 불필요)
 
 ```
