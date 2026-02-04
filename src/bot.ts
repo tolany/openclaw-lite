@@ -176,7 +176,22 @@ bot.on("message:document", async (ctx) => {
 });
 
 function textToHtml(text: string): string {
-  return text
+  // Convert markdown tables to <pre> blocks (copyable in Telegram)
+  let result = text.replace(/((?:\|.+\|\n?)+)/g, (tableMatch) => {
+    const lines = tableMatch.trim().split('\n');
+    // Filter out separator rows (| --- | --- |)
+    const dataLines = lines.filter(line => !/^[\s|:-]+$/.test(line.replace(/\|/g, '')));
+    if (dataLines.length > 0) {
+      // Clean up table formatting for display
+      const cleanTable = dataLines.map(line => {
+        return line.replace(/^\||\|$/g, '').trim();
+      }).join('\n');
+      return `<pre>${cleanTable}</pre>`;
+    }
+    return tableMatch;
+  });
+
+  return result
     // Headers (###, ##, #) -> bold
     .replace(/^#{1,3}\s+(.+)$/gm, "<b>$1</b>")
     // Bold (**text** or __text__)
@@ -184,7 +199,7 @@ function textToHtml(text: string): string {
     .replace(/__(.*?)__/g, "<b>$1</b>")
     // Italic (*text* or _text_) - be careful not to match bullet points
     .replace(/(?<!\*)\*([^*\n]+)\*(?!\*)/g, "<i>$1</i>")
-    // Inline code
+    // Inline code (but not inside <pre>)
     .replace(/`([^`]+)`/g, "<code>$1</code>")
     // Bullet points
     .replace(/^\s*[-*]\s+/gm, "• ")

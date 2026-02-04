@@ -30,3 +30,19 @@ OpenClaw Lite v5.0 - Fast Track Listener Active.
 OpenClaw Lite v5.0 Integrated Engine Scheduled.
 [GraphDB] Connected to Neo4j
 [Bot] @tolanylitebot is now active and polling!
+[Cache] Schema updated: 1314 docs, 1224 rels
+[dotenv@17.2.3] injecting env (13) from .env -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+OpenClaw Lite v5.0 - Fast Track Listener Active.
+[Engine] Starting initialization...
+[Engine] All engines loaded and ready.
+OpenClaw Lite v5.0 Integrated Engine Scheduled.
+[GraphDB] Connected to Neo4j
+[Bot] @tolanylitebot is now active and polling!
+[dotenv@17.2.3] injecting env (13) from .env -- tip: 🔑 add access controls to secrets: https://dotenvx.com/ops
+OpenClaw Lite v5.0 - Fast Track Listener Active.
+[Engine] Starting initialization...
+[Engine] All engines loaded and ready.
+OpenClaw Lite v5.0 Integrated Engine Scheduled.
+[GraphDB] Connected to Neo4j
+[Bot] @tolanylitebot is now active and polling!
+[Cache] Schema updated: 1314 docs, 1224 rels
