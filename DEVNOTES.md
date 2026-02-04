@@ -164,9 +164,9 @@ BRAVE_API_KEY=xxx
 - Haiku 시도 → 할루시네이션 심함 → Sonnet으로 복귀
 - 비용 비싸지만 정확도 우선
 
-**Gemini**: 3.0 Flash Preview (gemini-3.0-flash-preview)
+**Gemini**: 3 Flash Preview (gemini-3-flash-preview) ✅ 작동 확인
 - 2.0 Flash 사용 안 함
-- 결제 전파 후 사용 예정
+- 비용: ~3원/요청 (Sonnet 대비 10배 저렴)
 
 ### 6. /provider 명령어 추가
 런타임에서 Provider 전환 가능 (재시작 불필요)

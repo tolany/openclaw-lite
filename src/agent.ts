@@ -367,7 +367,7 @@ ${bootstrap}`;
     const tools = getToolDeclarations();
 
     try {
-      const model = this.geminiClient!.getGenerativeModel({ model: "gemini-3.0-flash-preview", tools });
+      const model = this.geminiClient!.getGenerativeModel({ model: "gemini-3-flash-preview", tools });
       const chat = model.startChat({ history: geminiHistory });
 
       let result = await withRetry(
@@ -422,7 +422,7 @@ ${bootstrap}`;
       } catch (err: any) { return { text: `Error: ${err.message}`, stats: "" }; }
     } else {
       try {
-        const model = this.geminiClient!.getGenerativeModel({ model: "gemini-3.0-flash-preview" });
+        const model = this.geminiClient!.getGenerativeModel({ model: "gemini-3-flash-preview" });
         const result = await model.generateContent([
           { text: `${systemPrompt}\n\nUser: ${message}` },
           { inlineData: { mimeType, data: imageBuffer.toString("base64") } }
