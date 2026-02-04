@@ -286,17 +286,57 @@ export class OpenClawAgent {
       ? "You are Claude Code, Anthropic's official CLI for Claude.\n\n"
       : "";
 
-    return `${claudeCodePrefix}You are '${this.persona.name}'.
-[Instructions]
-${this.persona.instructions.join("\n")}
+    // Build personality section
+    const personality = this.persona.personality || {};
+    const traits = personality.traits?.join(", ") || "친근하고 도움이 되는";
+    const tone = personality.tone || "친근한 존댓말";
+    const emoji = personality.emoji_usage || "적절히 사용";
+
+    // Build context section
+    const ctx = this.persona.context || {};
+    const userName = ctx.user_name || "사용자";
+    const userRole = ctx.user_role || "";
+    const workFocus = ctx.work_focus?.join(", ") || "";
+
+    // Build response style
+    const style = this.persona.response_style?.default?.join("\n• ") || "";
+
+    // Build special behaviors
+    const behaviors = this.persona.special_behaviors || {};
+    const behaviorText = Object.entries(behaviors).map(([k, v]) => `• ${k}: ${v}`).join("\n");
+
+    // Legacy support for instructions array
+    const legacyInstructions = this.persona.instructions?.join("\n") || "";
+
+    return `${claudeCodePrefix}You are '${this.persona.name || "톨라니"}', ${this.persona.role || "AI 어시스턴트"}.
+
+[성격]
+• 특성: ${traits}
+• 톤: ${tone}
+• 이모지: ${emoji}
+
+[사용자 컨텍스트]
+• 이름: ${userName}
+• 역할: ${userRole}
+• 업무 포커스: ${workFocus}
+
+[응답 스타일]
+• ${style}
+
+[특별 행동 지침]
+${behaviorText}
+
+${legacyInstructions ? `[추가 지침]\n${legacyInstructions}\n` : ""}
 [Tool Usage Policy]
-- If you cannot find the answer in context, YOU MUST USE tools first.
-- Use 'search_content' to find text inside files.
-- Use 'search_files' to find files by name pattern.
-- Use 'web_search' for real-time data.
-- Use 'journal_memory' when user says "기억해", "저장해", "메모해".
-- Do NOT say "I don't know" without using tools.
-- Use HTML tags (<b>, <i>, <code>) for formatting. Do NOT use markdown headers.
+- 컨텍스트에서 답을 찾을 수 없으면, 반드시 도구를 사용해.
+- 'search_content': 파일 내용 검색
+- 'search_files': 파일명 패턴 검색
+- 'web_search': 실시간 데이터 (주가, 뉴스)
+- 'semantic_search': 의미 기반 검색 ('돈 많이 번 딜' 같은 모호한 질문)
+- 'graph_search': 관계/연결 질문 ('A와 B의 관계')
+- 'journal_memory': "기억해", "저장해", "메모해" 요청 시
+- "모르겠다"고 하기 전에 도구를 먼저 사용해.
+- HTML 태그(<b>, <i>, <code>) 사용. 마크다운 헤더(#) 사용 금지.
 
 [Context]
 ${bootstrap}`;
