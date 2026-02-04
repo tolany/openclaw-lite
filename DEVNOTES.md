@@ -159,12 +159,14 @@ BRAVE_API_KEY=xxx
 
 ---
 
-### 5. Claude Haiku로 변경 (NEW)
-- Sonnet → Haiku 3.5 변경 (claude-3-5-haiku-20241022)
-- 비용: Sonnet의 **1/12** 수준
-  - 입력: $3 → $0.25 / 1M
-  - 출력: $15 → $1.25 / 1M
-- 성능: 단순 비서 용도로 충분
+### 5. 모델 설정 확정
+**Claude**: Sonnet (claude-sonnet-4-20250514)
+- Haiku 시도 → 할루시네이션 심함 → Sonnet으로 복귀
+- 비용 비싸지만 정확도 우선
+
+**Gemini**: 3.0 Flash Preview (gemini-3.0-flash-preview)
+- 2.0 Flash 사용 안 함
+- 결제 전파 후 사용 예정
 
 ### 6. /provider 명령어 추가
 런타임에서 Provider 전환 가능 (재시작 불필요)
@@ -226,4 +228,4 @@ cd /home/jblee/openclaw-lite && git add -A && git commit -m "message" && git pus
 
 ---
 
-*마지막 업데이트: 2026-02-04 13:35 KST*
+*마지막 업데이트: 2026-02-04 13:45 KST*

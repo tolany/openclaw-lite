@@ -324,7 +324,7 @@ ${bootstrap}`;
     try {
       let response = await withRetry(
         () => this.claudeClient!.messages.create({
-          model: "claude-3-haiku-20240307",
+          model: "claude-sonnet-4-20250514",
           max_tokens: 4096,
           system: systemParam,
           tools: CLAUDE_TOOLS,
@@ -342,7 +342,7 @@ ${bootstrap}`;
         messages.push({ role: "user", content: toolResults });
         response = await withRetry(
           () => this.claudeClient!.messages.create({
-            model: "claude-3-haiku-20240307",
+            model: "claude-sonnet-4-20250514",
             max_tokens: 4096,
             system: systemParam,
             tools: CLAUDE_TOOLS,
@@ -354,7 +354,7 @@ ${bootstrap}`;
 
       const text = response.content.find((b): b is Anthropic.TextBlock => b.type === "text")?.text || "";
       const tokens = response.usage.input_tokens + response.usage.output_tokens;
-      const cost = parseFloat(((response.usage.input_tokens / 1e6 * 0.25 + response.usage.output_tokens / 1e6 * 1.25) * 1400).toFixed(1));
+      const cost = parseFloat(((response.usage.input_tokens / 1e6 * 3 + response.usage.output_tokens / 1e6 * 15) * 1400).toFixed(1));
       return { text, stats: `[Claude|T:${tokens}|${cost}원]`, tokens, cost };
     } catch (err: any) {
       logError("Claude", err);
@@ -367,7 +367,7 @@ ${bootstrap}`;
     const tools = getToolDeclarations();
 
     try {
-      const model = this.geminiClient!.getGenerativeModel({ model: "gemini-2.0-flash", tools });
+      const model = this.geminiClient!.getGenerativeModel({ model: "gemini-3.0-flash-preview", tools });
       const chat = model.startChat({ history: geminiHistory });
 
       let result = await withRetry(
@@ -409,7 +409,7 @@ ${bootstrap}`;
     if (this.provider === "claude") {
       try {
         const response = await this.claudeClient!.messages.create({
-          model: "claude-3-haiku-20240307", max_tokens: 4096, system: systemPrompt,
+          model: "claude-sonnet-4-20250514", max_tokens: 4096, system: systemPrompt,
           messages: [{ role: "user", content: [
             { type: "image", source: { type: "base64", media_type: mimeType as any, data: imageBuffer.toString("base64") } },
             { type: "text", text: message }
@@ -417,12 +417,12 @@ ${bootstrap}`;
         });
         const text = response.content.find((b): b is Anthropic.TextBlock => b.type === "text")?.text || "";
         const tokens = response.usage.input_tokens + response.usage.output_tokens;
-        const cost = ((response.usage.input_tokens / 1e6 * 0.25 + response.usage.output_tokens / 1e6 * 1.25) * 1400).toFixed(1);
+        const cost = ((response.usage.input_tokens / 1e6 * 3 + response.usage.output_tokens / 1e6 * 15) * 1400).toFixed(1);
         return { text, stats: `[Claude|T:${tokens}|${cost}원]` };
       } catch (err: any) { return { text: `Error: ${err.message}`, stats: "" }; }
     } else {
       try {
-        const model = this.geminiClient!.getGenerativeModel({ model: "gemini-2.0-flash" });
+        const model = this.geminiClient!.getGenerativeModel({ model: "gemini-3.0-flash-preview" });
         const result = await model.generateContent([
           { text: `${systemPrompt}\n\nUser: ${message}` },
           { inlineData: { mimeType, data: imageBuffer.toString("base64") } }
