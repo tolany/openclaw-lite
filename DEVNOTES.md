@@ -206,4 +206,17 @@ cd /home/jblee/openclaw-lite && git add -A && git commit -m "message" && git pus
 
 ---
 
-*마지막 업데이트: 2026-02-04 13:25 KST*
+---
+
+## 개발 워크플로우
+
+**모든 작업 후 필수:**
+1. DEVNOTES.md 업데이트
+2. 개인정보 검수 (API 키, 비밀번호, 개인 경로 노출 금지)
+3. git commit & push
+
+**주의**: 퍼블릭 레포이므로 커밋 전 민감정보 확인 필수!
+
+---
+
+*마지막 업데이트: 2026-02-04 13:35 KST*
