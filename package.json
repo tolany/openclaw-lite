@@ -27,6 +27,7 @@
     "better-sqlite3": "^12.6.2",
     "dotenv": "^17.2.3",
     "glob": "^13.0.1",
+    "googleapis": "^171.2.0",
     "grammy": "^1.39.3",
     "node-cron": "^4.2.1",
     "pdf-parse": "^2.4.5",

@@ -46,9 +46,11 @@ async function withRetry<T>(
 
 // Anthropic tool schema
 const CLAUDE_TOOLS: Anthropic.Tool[] = [
-  { name: "read_file", description: "Read file content from vault", input_schema: { type: "object" as const, properties: { filePath: { type: "string" } }, required: ["filePath"] } },
-  { name: "search_files", description: "Find files by pattern", input_schema: { type: "object" as const, properties: { pattern: { type: "string" } }, required: ["pattern"] } },
-  { name: "search_content", description: "Search inside file contents", input_schema: { type: "object" as const, properties: { query: { type: "string" }, fileType: { type: "string" } }, required: ["query"] } },
+  { name: "read_file", description: "Read file content. Supports: vault path, gdrive:path, 투자검토:path, or absolute path", input_schema: { type: "object" as const, properties: { filePath: { type: "string", description: "Path with optional prefix: gdrive:, drive:, 투자검토:, work:, personal:" } }, required: ["filePath"] } },
+  { name: "search_files", description: "Find files by pattern. Prefix with gdrive:, 투자검토: etc for Drive search", input_schema: { type: "object" as const, properties: { pattern: { type: "string", description: "Glob pattern, optionally prefixed with gdrive:, 투자검토:" } }, required: ["pattern"] } },
+  { name: "search_content", description: "Search inside file contents", input_schema: { type: "object" as const, properties: { query: { type: "string" }, fileType: { type: "string" }, searchIn: { type: "string", description: "Optional: gdrive:, 투자검토:, or path to search in" } }, required: ["query"] } },
+  { name: "list_dir", description: "List directory contents", input_schema: { type: "object" as const, properties: { dirPath: { type: "string", description: "Directory path with optional prefix" } }, required: ["dirPath"] } },
+  { name: "copy_to_vault", description: "Copy file from Drive to vault", input_schema: { type: "object" as const, properties: { sourcePath: { type: "string", description: "Source path (e.g., gdrive:path)" }, destPath: { type: "string", description: "Destination path in vault" } }, required: ["sourcePath", "destPath"] } },
   { name: "journal_memory", description: "Save to daily journal", input_schema: { type: "object" as const, properties: { content: { type: "string" }, category: { type: "string", enum: ["insight", "meeting", "todo", "idea"] } }, required: ["content", "category"] } },
   { name: "write_file", description: "Write or append to file", input_schema: { type: "object" as const, properties: { filePath: { type: "string" }, content: { type: "string" }, mode: { type: "string", enum: ["overwrite", "append"] } }, required: ["filePath", "content"] } },
   { name: "web_search", description: "Search web for real-time info", input_schema: { type: "object" as const, properties: { query: { type: "string" }, count: { type: "number" } }, required: ["query"] } },
@@ -151,7 +153,9 @@ export class OpenClawAgent {
       switch (name) {
         case "read_file": result = this.librarian.readFile(input.filePath); break;
         case "search_files": result = await this.librarian.searchFiles(input.pattern); break;
-        case "search_content": result = this.librarian.searchContent(input.query, input.fileType); break;
+        case "search_content": result = this.librarian.searchContent(input.query, input.fileType, input.searchIn); break;
+        case "list_dir": result = this.librarian.listDir(input.dirPath); break;
+        case "copy_to_vault": result = this.librarian.copyToVault(input.sourcePath, input.destPath); break;
         case "journal_memory": result = this.journalist.journalMemory(input.content, input.category); break;
         case "write_file": result = this.journalist.writeFile(input.filePath, input.content, input.mode); break;
         case "web_search": result = await this.web.webSearch(input.query, input.count); break;

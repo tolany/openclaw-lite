@@ -15,19 +15,19 @@ export function getToolDeclarations(): Tool[] {
       // Librarian tools
       {
         name: "read_file",
-        description: "Read file content from vault",
+        description: "Read file content. Supports: vault path, gdrive:path, 투자검토:path, or absolute path",
         parameters: {
           type: SchemaType.OBJECT,
-          properties: { filePath: { type: SchemaType.STRING, description: "Path relative to vault" } },
+          properties: { filePath: { type: SchemaType.STRING, description: "Path with optional prefix: gdrive:, drive:, 투자검토:, work:, personal:" } },
           required: ["filePath"]
         }
       },
       {
         name: "search_files",
-        description: "Find files by pattern (e.g., '**/*keyword*.md')",
+        description: "Find files by pattern. Prefix with gdrive:, 투자검토: etc for Drive search",
         parameters: {
           type: SchemaType.OBJECT,
-          properties: { pattern: { type: SchemaType.STRING, description: "Glob pattern" } },
+          properties: { pattern: { type: SchemaType.STRING, description: "Glob pattern, optionally prefixed with gdrive:, 투자검토:" } },
           required: ["pattern"]
         }
       },
@@ -38,9 +38,31 @@ export function getToolDeclarations(): Tool[] {
           type: SchemaType.OBJECT,
           properties: {
             query: { type: SchemaType.STRING, description: "Text to search" },
-            fileType: { type: SchemaType.STRING, description: "File extension (default: md)" }
+            fileType: { type: SchemaType.STRING, description: "File extension (default: md)" },
+            searchIn: { type: SchemaType.STRING, description: "Optional: gdrive:, 투자검토:, or path to search in" }
           },
           required: ["query"]
+        }
+      },
+      {
+        name: "list_dir",
+        description: "List directory contents. Supports gdrive:, 투자검토: prefixes",
+        parameters: {
+          type: SchemaType.OBJECT,
+          properties: { dirPath: { type: SchemaType.STRING, description: "Directory path with optional prefix" } },
+          required: ["dirPath"]
+        }
+      },
+      {
+        name: "copy_to_vault",
+        description: "Copy file from Drive to vault",
+        parameters: {
+          type: SchemaType.OBJECT,
+          properties: {
+            sourcePath: { type: SchemaType.STRING, description: "Source path (e.g., gdrive:path)" },
+            destPath: { type: SchemaType.STRING, description: "Destination path in vault" }
+          },
+          required: ["sourcePath", "destPath"]
         }
       },
       // Journalist tools

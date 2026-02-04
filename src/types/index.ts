@@ -7,6 +7,15 @@ export interface ToolResult {
   files?: string[];
   message?: string;
   results?: SearchResult[];
+  // Directory/file operations
+  type?: string;
+  path?: string;
+  basePath?: string;
+  total?: number;
+  entries?: { name: string; type: string }[];
+  // Copy operation
+  success?: boolean;
+  copied?: string;
 }
 
 export interface SearchResult {
