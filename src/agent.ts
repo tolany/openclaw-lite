@@ -324,7 +324,7 @@ ${bootstrap}`;
     try {
       let response = await withRetry(
         () => this.claudeClient!.messages.create({
-          model: "claude-3-5-haiku-20241022",
+          model: "claude-3-haiku-20240307",
           max_tokens: 4096,
           system: systemParam,
           tools: CLAUDE_TOOLS,
@@ -342,7 +342,7 @@ ${bootstrap}`;
         messages.push({ role: "user", content: toolResults });
         response = await withRetry(
           () => this.claudeClient!.messages.create({
-            model: "claude-3-5-haiku-20241022",
+            model: "claude-3-haiku-20240307",
             max_tokens: 4096,
             system: systemParam,
             tools: CLAUDE_TOOLS,
@@ -409,7 +409,7 @@ ${bootstrap}`;
     if (this.provider === "claude") {
       try {
         const response = await this.claudeClient!.messages.create({
-          model: "claude-3-5-haiku-20241022", max_tokens: 4096, system: systemPrompt,
+          model: "claude-3-haiku-20240307", max_tokens: 4096, system: systemPrompt,
           messages: [{ role: "user", content: [
             { type: "image", source: { type: "base64", media_type: mimeType as any, data: imageBuffer.toString("base64") } },
             { type: "text", text: message }
