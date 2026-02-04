@@ -35,11 +35,26 @@ export class VectorDB {
     }
   }
 
-  // Get embedding for text using Gemini
-  private async getEmbedding(text: string): Promise<number[]> {
+  // Get embedding for text using Gemini (with retry)
+  private async getEmbedding(text: string, retries: number = 3): Promise<number[]> {
     const model = this.genAI.getGenerativeModel({ model: "text-embedding-004" });
-    const result = await model.embedContent(text);
-    return result.embedding.values;
+
+    for (let attempt = 0; attempt < retries; attempt++) {
+      try {
+        const result = await model.embedContent(text);
+        return result.embedding.values;
+      } catch (err: any) {
+        if (err.message?.includes("429") && attempt < retries - 1) {
+          // Rate limited - wait and retry
+          const waitTime = (attempt + 1) * 5000; // 5s, 10s, 15s
+          console.log(`[VectorDB] Rate limited, waiting ${waitTime / 1000}s...`);
+          await new Promise(r => setTimeout(r, waitTime));
+        } else {
+          throw err;
+        }
+      }
+    }
+    throw new Error("Max retries exceeded");
   }
 
   // Index a single document
@@ -100,8 +115,8 @@ export class VectorDB {
           progressCallback(i + 1, files.length);
         }
 
-        // Rate limit: ~10 req/sec to stay under 1500/min
-        await new Promise(r => setTimeout(r, 100));
+        // Rate limit: ~5 req/sec to be safe (300/min, well under 1500/min limit)
+        await new Promise(r => setTimeout(r, 200));
       } catch (err) {
         failed++;
       }
