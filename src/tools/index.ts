@@ -3,9 +3,10 @@
 import { LibrarianTools } from "./librarian";
 import { JournalistTools } from "./journalist";
 import { WebTools } from "./web";
+import { UtilityTools } from "./utility";
 import { Tool, SchemaType } from "@google/generative-ai";
 
-export { LibrarianTools, JournalistTools, WebTools };
+export { LibrarianTools, JournalistTools, WebTools, UtilityTools };
 
 // Tool declarations for Gemini
 export function getToolDeclarations(): Tool[] {
@@ -89,6 +90,39 @@ export function getToolDeclarations(): Tool[] {
           type: SchemaType.OBJECT,
           properties: { scriptName: { type: SchemaType.STRING, description: "Script name (run_scraper.sh, run_tracker.sh)" } },
           required: ["scriptName"]
+        }
+      },
+      // PDF reader
+      {
+        name: "read_pdf",
+        description: "Read and parse PDF file content",
+        parameters: {
+          type: SchemaType.OBJECT,
+          properties: { filePath: { type: SchemaType.STRING, description: "Path to PDF file" } },
+          required: ["filePath"]
+        }
+      },
+      // Reminder
+      {
+        name: "set_reminder",
+        description: "Set a reminder for later. Parse natural language like '내일 오전 10시', '30분 후'",
+        parameters: {
+          type: SchemaType.OBJECT,
+          properties: {
+            message: { type: SchemaType.STRING, description: "Reminder message" },
+            time: { type: SchemaType.STRING, description: "Time in ISO format or relative (e.g., '+30m', '+1h', '+1d')" }
+          },
+          required: ["message", "time"]
+        }
+      },
+      // Obsidian link
+      {
+        name: "obsidian_link",
+        description: "Generate Obsidian deep link for a file",
+        parameters: {
+          type: SchemaType.OBJECT,
+          properties: { filePath: { type: SchemaType.STRING, description: "Path to file in vault" } },
+          required: ["filePath"]
         }
       }
     ]

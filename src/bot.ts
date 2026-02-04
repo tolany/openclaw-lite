@@ -1,10 +1,17 @@
-// OpenClaw Lite - Telegram Bot (v3.0 - Multi-provider)
+// OpenClaw Lite - Telegram Bot (v4.0 - Enhanced Features)
 
 import { Bot } from "grammy";
 import * as dotenv from "dotenv";
 import * as path from "path";
+import * as cron from "node-cron";
 import { OpenClawAgent, Provider } from "./agent";
-import { saveConversation, getHistory, clearHistory, getUsageStats } from "./lib/db";
+import {
+  saveConversation, getHistory, clearHistory, getUsageStats,
+  getPendingReminders, markReminderSent, getUserReminders, deleteReminder,
+  setActiveTopic, getActiveTopic, clearActiveTopic,
+  getMonthlyCost, getTodayCost
+} from "./lib/db";
+import { UtilityTools } from "./tools/utility";
 import { logChat, logError } from "./lib/logger";
 
 dotenv.config({ path: path.resolve(__dirname, "../.env") });
@@ -23,6 +30,7 @@ const agent = new OpenClawAgent(
 );
 
 const ALLOWED_ID = Number(process.env.ALLOWED_USER_ID);
+const utility = new UtilityTools(process.env.VAULT_PATH!);
 
 // Auth middleware
 bot.use(async (ctx, next) => {
@@ -31,11 +39,12 @@ bot.use(async (ctx, next) => {
 });
 
 // Commands
-bot.command("start", (ctx) => ctx.reply(`OpenClaw Lite v3.0 [${provider}]`));
+bot.command("start", (ctx) => ctx.reply(`OpenClaw Lite v4.0 [${provider}]`));
 
 bot.command("clear", async (ctx) => {
   clearHistory(ctx.from!.id);
-  ctx.reply("History cleared.");
+  clearActiveTopic(ctx.from!.id);
+  ctx.reply("History and topic cleared.");
 });
 
 bot.command("stats", async (ctx) => {
@@ -43,6 +52,100 @@ bot.command("stats", async (ctx) => {
   if (!stats.length) return ctx.reply("No usage data.");
   const lines = stats.map((s: any) => `${s.date}: ${s.total_messages}msg, ${s.total_tokens}T, ${s.total_cost?.toFixed(1)}원`);
   ctx.reply(`<b>Usage (7 days)</b>\n<code>${lines.join("\n")}</code>`, { parse_mode: "HTML" });
+});
+
+// Cost command - monthly breakdown
+bot.command("cost", async (ctx) => {
+  const userId = ctx.from!.id;
+  const today = getTodayCost(userId);
+  const monthly = getMonthlyCost(userId);
+
+  let msg = `<b>💰 비용 현황</b>\n\n`;
+  msg += `<b>오늘</b>: ${today.messages}건, ${today.tokens.toLocaleString()}T, ${today.cost.toFixed(0)}원\n\n`;
+  msg += `<b>월별 현황</b>\n`;
+
+  if (monthly.length === 0) {
+    msg += `<code>데이터 없음</code>`;
+  } else {
+    msg += `<code>`;
+    for (const m of monthly) {
+      msg += `${m.month}: ${m.total_tokens.toLocaleString()}T, ${m.total_cost.toFixed(0)}원\n`;
+    }
+    msg += `</code>`;
+  }
+
+  ctx.reply(msg, { parse_mode: "HTML" });
+});
+
+// Topic commands
+bot.command("topic", async (ctx) => {
+  const userId = ctx.from!.id;
+  const args = ctx.message?.text?.split(" ").slice(1).join(" ").trim() || "";
+
+  if (!args) {
+    const current = getActiveTopic(userId);
+    return ctx.reply(current ? `현재 토픽: <b>${current}</b>` : "활성 토픽 없음. /topic <이름>으로 설정하세요.", { parse_mode: "HTML" });
+  }
+
+  if (args === "clear") {
+    clearActiveTopic(userId);
+    clearHistory(userId);
+    return ctx.reply("토픽이 초기화되었습니다.");
+  }
+
+  setActiveTopic(userId, args);
+  clearHistory(userId);
+  ctx.reply(`토픽이 <b>${args}</b>로 설정되었습니다. 대화 히스토리가 초기화됩니다.`, { parse_mode: "HTML" });
+});
+
+// Reminders command
+bot.command("reminders", async (ctx) => {
+  const userId = ctx.from!.id;
+  const reminders = getUserReminders(userId);
+
+  if (reminders.length === 0) {
+    return ctx.reply("예정된 리마인더가 없습니다.");
+  }
+
+  let msg = `<b>⏰ 예정된 리마인더</b>\n\n`;
+  for (const r of reminders) {
+    const time = new Date(r.remind_at).toLocaleString("ko-KR", { timeZone: "Asia/Seoul" });
+    msg += `#${r.id}: ${r.message}\n└ ${time}\n\n`;
+  }
+  msg += `<code>/delreminder [ID]로 삭제</code>`;
+
+  ctx.reply(msg, { parse_mode: "HTML" });
+});
+
+// Delete reminder
+bot.command("delreminder", async (ctx) => {
+  const args = ctx.message?.text?.split(" ").slice(1) || [];
+  if (args.length === 0) {
+    return ctx.reply("사용법: /delreminder [ID]");
+  }
+  const id = parseInt(args[0]);
+  if (isNaN(id)) {
+    return ctx.reply("유효한 ID를 입력하세요.");
+  }
+  deleteReminder(id);
+  ctx.reply(`리마인더 #${id}가 삭제되었습니다.`);
+});
+
+// Health check command
+bot.command("health", async (ctx) => {
+  const health = await utility.healthCheck();
+
+  const status = (ok: boolean) => ok ? "✅" : "❌";
+  const uptime = `${Math.floor(health.uptime / 3600)}h ${Math.floor((health.uptime % 3600) / 60)}m`;
+
+  const msg = `<b>🏥 시스템 상태</b>\n\n` +
+    `Vault: ${status(health.vault)}\n` +
+    `Database: ${status(health.database)}\n` +
+    `Brave API: ${status(health.brave)}\n` +
+    `Uptime: ${uptime}\n` +
+    `Memory: ${health.memory.used}MB / ${health.memory.total}MB`;
+
+  ctx.reply(msg, { parse_mode: "HTML" });
 });
 
 // Markdown to Telegram HTML
@@ -65,8 +168,17 @@ bot.on("message:text", async (ctx) => {
 
   try {
     await ctx.replyWithChatAction("typing");
+
+    // Set userId for reminder tool
+    agent.setUserId(userId);
+
+    // Get current topic for context
+    const topic = getActiveTopic(userId);
     const history = getHistory(userId, 20);
-    const { text, stats, tokens, cost } = await agent.chat(userMessage, history);
+
+    // Add topic context if exists
+    const contextPrefix = topic ? `[현재 토픽: ${topic}]\n` : "";
+    const { text, stats, tokens, cost } = await agent.chat(contextPrefix + userMessage, history);
 
     saveConversation(userId, "user", userMessage);
     saveConversation(userId, "assistant", text, tokens, cost);
@@ -87,6 +199,10 @@ bot.on("message:photo", async (ctx) => {
 
   try {
     await ctx.replyWithChatAction("typing");
+
+    // Set userId for tools
+    agent.setUserId(userId);
+
     const photos = ctx.message.photo;
     const photo = photos[photos.length - 1];
     const file = await ctx.api.getFile(photo.file_id);
@@ -109,5 +225,24 @@ bot.on("message:photo", async (ctx) => {
   }
 });
 
+// Reminder scheduler - check every minute
+cron.schedule("* * * * *", async () => {
+  const pendingReminders = getPendingReminders();
+
+  for (const reminder of pendingReminders) {
+    try {
+      await bot.api.sendMessage(
+        reminder.user_id,
+        `⏰ <b>리마인더</b>\n\n${reminder.message}`,
+        { parse_mode: "HTML" }
+      );
+      markReminderSent(reminder.id);
+      console.log(`Reminder #${reminder.id} sent to user ${reminder.user_id}`);
+    } catch (err) {
+      logError("ReminderScheduler", err);
+    }
+  }
+});
+
 bot.start();
-console.log(`OpenClaw Lite v3.0 started [${provider}]`);
+console.log(`OpenClaw Lite v4.0 started [${provider}]`);

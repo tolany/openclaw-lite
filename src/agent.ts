@@ -5,8 +5,9 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import * as fs from "fs";
 import * as path from "path";
 import { exec } from "child_process";
-import { LibrarianTools, JournalistTools, WebTools, getToolDeclarations } from "./tools";
+import { LibrarianTools, JournalistTools, WebTools, UtilityTools, getToolDeclarations } from "./tools";
 import { logTool, logError } from "./lib/logger";
+import { addReminder } from "./lib/db";
 import { ChatMessage } from "./types";
 
 // Anthropic tool schema
@@ -17,7 +18,10 @@ const CLAUDE_TOOLS: Anthropic.Tool[] = [
   { name: "journal_memory", description: "Save to daily journal", input_schema: { type: "object" as const, properties: { content: { type: "string" }, category: { type: "string", enum: ["insight", "meeting", "todo", "idea"] } }, required: ["content", "category"] } },
   { name: "write_file", description: "Write or append to file", input_schema: { type: "object" as const, properties: { filePath: { type: "string" }, content: { type: "string" }, mode: { type: "string", enum: ["overwrite", "append"] } }, required: ["filePath", "content"] } },
   { name: "web_search", description: "Search web for real-time info", input_schema: { type: "object" as const, properties: { query: { type: "string" }, count: { type: "number" } }, required: ["query"] } },
-  { name: "run_script", description: "Run automation scripts", input_schema: { type: "object" as const, properties: { scriptName: { type: "string" } }, required: ["scriptName"] } }
+  { name: "run_script", description: "Run automation scripts", input_schema: { type: "object" as const, properties: { scriptName: { type: "string" } }, required: ["scriptName"] } },
+  { name: "read_pdf", description: "Read and parse PDF file content", input_schema: { type: "object" as const, properties: { filePath: { type: "string" } }, required: ["filePath"] } },
+  { name: "set_reminder", description: "Set a reminder. Time can be relative (+30m, +1h, +1d) or ISO format", input_schema: { type: "object" as const, properties: { message: { type: "string" }, time: { type: "string" } }, required: ["message", "time"] } },
+  { name: "obsidian_link", description: "Generate Obsidian deep link for a file", input_schema: { type: "object" as const, properties: { filePath: { type: "string" } }, required: ["filePath"] } }
 ];
 
 export type Provider = "claude" | "gemini";
@@ -59,6 +63,8 @@ export class OpenClawAgent {
   private librarian: LibrarianTools;
   private journalist: JournalistTools;
   private web: WebTools;
+  private utility: UtilityTools;
+  private userId: number = 0;
 
   constructor(provider: Provider, apiKey: string, vaultPath: string, personaPath: string, braveApiKey?: string) {
     this.provider = provider;
@@ -81,6 +87,28 @@ export class OpenClawAgent {
     this.librarian = new LibrarianTools(vaultPath);
     this.journalist = new JournalistTools(vaultPath);
     this.web = new WebTools(braveApiKey);
+    this.utility = new UtilityTools(vaultPath);
+  }
+
+  setUserId(userId: number) {
+    this.userId = userId;
+  }
+
+  private parseRelativeTime(timeStr: string): Date {
+    const now = new Date();
+    const match = timeStr.match(/^\+(\d+)([mhd])$/);
+    if (match) {
+      const value = parseInt(match[1]);
+      const unit = match[2];
+      switch (unit) {
+        case "m": now.setMinutes(now.getMinutes() + value); break;
+        case "h": now.setHours(now.getHours() + value); break;
+        case "d": now.setDate(now.getDate() + value); break;
+      }
+      return now;
+    }
+    // Try parsing as ISO or natural date
+    return new Date(timeStr);
   }
 
   private async handleToolCall(name: string, input: any): Promise<string> {
@@ -97,6 +125,21 @@ export class OpenClawAgent {
           const allowed = ["run_scraper.sh", "run_tracker.sh"];
           if (!allowed.includes(input.scriptName)) result = { error: "Unauthorized" };
           else { exec(`bash ${path.join(this.projectRoot, input.scriptName)} &`); result = { message: "Started" }; }
+          break;
+        case "read_pdf":
+          result = await this.utility.readPdf(input.filePath);
+          break;
+        case "set_reminder":
+          const remindAt = this.parseRelativeTime(input.time);
+          if (isNaN(remindAt.getTime())) {
+            result = { error: "Invalid time format" };
+          } else {
+            const id = addReminder(this.userId, input.message, remindAt);
+            result = { success: true, id, remind_at: remindAt.toISOString() };
+          }
+          break;
+        case "obsidian_link":
+          result = { link: this.utility.createObsidianLink(input.filePath) };
           break;
         default: result = { error: `Unknown: ${name}` };
       }
