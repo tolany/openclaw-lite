@@ -159,6 +159,31 @@ export function getToolDeclarations(): Tool[] {
           },
           required: ["query"]
         }
+      },
+      // GraphRAG search
+      {
+        name: "graph_search",
+        description: "GraphRAG search - finds documents AND their relationships. Use for queries about people, projects, connections.",
+        parameters: {
+          type: SchemaType.OBJECT,
+          properties: {
+            query: { type: SchemaType.STRING, description: "Search query" },
+            depth: { type: SchemaType.NUMBER, description: "How many hops to traverse (default 2)" }
+          },
+          required: ["query"]
+        }
+      },
+      {
+        name: "find_connection",
+        description: "Find path/connection between two topics or documents",
+        parameters: {
+          type: SchemaType.OBJECT,
+          properties: {
+            from: { type: SchemaType.STRING, description: "Starting topic" },
+            to: { type: SchemaType.STRING, description: "Ending topic" }
+          },
+          required: ["from", "to"]
+        }
       }
     ]
   }];

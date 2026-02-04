@@ -9,6 +9,7 @@ import { LibrarianTools, JournalistTools, WebTools, UtilityTools, getToolDeclara
 import { logTool, logError } from "./lib/logger";
 import { addReminder } from "./lib/db";
 import { VectorDB } from "./lib/vectordb";
+import { GraphDB } from "./lib/graphdb";
 import { ChatMessage } from "./types";
 
 // Retry configuration
@@ -59,7 +60,9 @@ const CLAUDE_TOOLS: Anthropic.Tool[] = [
   { name: "read_pdf", description: "Read and parse PDF file content", input_schema: { type: "object" as const, properties: { filePath: { type: "string" } }, required: ["filePath"] } },
   { name: "set_reminder", description: "Set a reminder. Time can be relative (+30m, +1h, +1d) or ISO format", input_schema: { type: "object" as const, properties: { message: { type: "string" }, time: { type: "string" } }, required: ["message", "time"] } },
   { name: "obsidian_link", description: "Generate Obsidian deep link for a file", input_schema: { type: "object" as const, properties: { filePath: { type: "string" } }, required: ["filePath"] } },
-  { name: "semantic_search", description: "Semantic/meaning-based search. Use for vague queries like '돈 많이 번 딜', '실패한 투자'. Returns similar documents by meaning, not keywords.", input_schema: { type: "object" as const, properties: { query: { type: "string", description: "Natural language query" }, topK: { type: "number", description: "Number of results (default 5)" } }, required: ["query"] } }
+  { name: "semantic_search", description: "Semantic/meaning-based search. Use for vague queries like '돈 많이 번 딜', '실패한 투자'. Returns similar documents by meaning, not keywords.", input_schema: { type: "object" as const, properties: { query: { type: "string", description: "Natural language query" }, topK: { type: "number", description: "Number of results (default 5)" } }, required: ["query"] } },
+  { name: "graph_search", description: "GraphRAG search - finds documents AND their relationships. Use for queries about people, projects, connections. Returns direct matches + related docs through links.", input_schema: { type: "object" as const, properties: { query: { type: "string", description: "Search query" }, depth: { type: "number", description: "How many hops to traverse (default 2)" } }, required: ["query"] } },
+  { name: "find_connection", description: "Find path/connection between two topics or documents", input_schema: { type: "object" as const, properties: { from: { type: "string" }, to: { type: "string" } }, required: ["from", "to"] } }
 ];
 
 export type Provider = "claude" | "gemini";
@@ -103,6 +106,7 @@ export class OpenClawAgent {
   private web: WebTools;
   private utility: UtilityTools;
   private vectorDB: VectorDB;
+  private graphDB: GraphDB;
   private userId: number = 0;
 
   constructor(provider: Provider, apiKey: string, vaultPath: string, personaPath: string, braveApiKey?: string, geminiApiKey?: string) {
@@ -131,6 +135,23 @@ export class OpenClawAgent {
     // VectorDB uses Gemini embedding API (always use Gemini key for this)
     const vectorApiKey = geminiApiKey || process.env.GOOGLE_API_KEY || "";
     this.vectorDB = new VectorDB(vectorApiKey, vaultPath);
+
+    // GraphDB for GraphRAG
+    this.graphDB = new GraphDB(vaultPath);
+
+    // Initialize GraphDB if credentials are available
+    const neo4jUri = process.env.NEO4J_URI;
+    const neo4jUser = process.env.NEO4J_USER;
+    const neo4jPassword = process.env.NEO4J_PASSWORD;
+    if (neo4jUri && neo4jUser && neo4jPassword) {
+      this.graphDB.init(neo4jUri, neo4jUser, neo4jPassword).catch(err => {
+        console.log("[GraphDB] Not connected:", err.message);
+      });
+    }
+  }
+
+  getGraphDB(): GraphDB {
+    return this.graphDB;
   }
 
   setUserId(userId: number) {
@@ -188,6 +209,13 @@ export class OpenClawAgent {
           break;
         case "semantic_search":
           result = await this.vectorDB.search(input.query, input.topK || 5);
+          break;
+        case "graph_search":
+          result = await this.graphDB.graphSearch(input.query, input.depth || 2);
+          break;
+        case "find_connection":
+          const pathResult = await this.graphDB.findPath(input.from, input.to);
+          result = { path: pathResult, connected: pathResult.length > 0 };
           break;
         default: result = { error: `Unknown: ${name}` };
       }

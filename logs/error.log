@@ -11879,3 +11879,1416 @@ the module (for instance, using `npm rebuild` or `npm install`).
 }
 
 Node.js v22.22.0
+/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:121
+        throw e;
+        ^
+
+Error: The module '/home/jblee/openclaw-lite/node_modules/better-sqlite3/build/Release/better_sqlite3.node'
+was compiled against a different Node.js version using
+NODE_MODULE_VERSION 137. This version of Node.js requires
+NODE_MODULE_VERSION 127. Please try re-compiling or re-installing
+the module (for instance, using `npm rebuild` or `npm install`).
+    at Object..node (node:internal/modules/cjs/loader:1865:18)
+    at Module.load (node:internal/modules/cjs/loader:1441:32)
+    at Function._load (node:internal/modules/cjs/loader:1263:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+    at Module.require (node:internal/modules/cjs/loader:1463:12)
+    at require (node:internal/modules/helpers:147:16)
+    at bindings (/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:112:48)
+    at new Database (/home/jblee/openclaw-lite/node_modules/better-sqlite3/lib/database.js:48:64)
+    at Object.<anonymous> (/home/jblee/openclaw-lite/dist/lib/db.js:61:12) {
+  code: 'ERR_DLOPEN_FAILED'
+}
+
+Node.js v22.22.0
+/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:121
+        throw e;
+        ^
+
+Error: The module '/home/jblee/openclaw-lite/node_modules/better-sqlite3/build/Release/better_sqlite3.node'
+was compiled against a different Node.js version using
+NODE_MODULE_VERSION 137. This version of Node.js requires
+NODE_MODULE_VERSION 127. Please try re-compiling or re-installing
+the module (for instance, using `npm rebuild` or `npm install`).
+    at Object..node (node:internal/modules/cjs/loader:1865:18)
+    at Module.load (node:internal/modules/cjs/loader:1441:32)
+    at Function._load (node:internal/modules/cjs/loader:1263:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+    at Module.require (node:internal/modules/cjs/loader:1463:12)
+    at require (node:internal/modules/helpers:147:16)
+    at bindings (/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:112:48)
+    at new Database (/home/jblee/openclaw-lite/node_modules/better-sqlite3/lib/database.js:48:64)
+    at Object.<anonymous> (/home/jblee/openclaw-lite/dist/lib/db.js:61:12) {
+  code: 'ERR_DLOPEN_FAILED'
+}
+
+Node.js v22.22.0
+[2026-02-04 12:28:59] ERROR: Gemini: [GoogleGenerativeAI Error]: Error fetching from https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent: [429 Too Many Requests] You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. 
+* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_input_token_count, limit: 0, model: gemini-2.0-flash
+* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-2.0-flash
+* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-2.0-flash
+Please retry in 58.809290254s. [{"@type":"type.googleapis.com/google.rpc.Help","links":[{"description":"Learn more about Gemini API quotas","url":"https://ai.google.dev/gemini-api/docs/rate-limits"}]},{"@type":"type.googleapis.com/google.rpc.QuotaFailure","violations":[{"quotaMetric":"generativelanguage.googleapis.com/generate_content_free_tier_input_token_count","quotaId":"GenerateContentInputTokensPerModelPerMinute-FreeTier","quotaDimensions":{"model":"gemini-2.0-flash","location":"global"}},{"quotaMetric":"generativelanguage.googleapis.com/generate_content_free_tier_requests","quotaId":"GenerateRequestsPerMinutePerProjectPerModel-FreeTier","quotaDimensions":{"location":"global","model":"gemini-2.0-flash"}},{"quotaMetric":"generativelanguage.googleapis.com/generate_content_free_tier_requests","quotaId":"GenerateRequestsPerDayPerProjectPerModel-FreeTier","quotaDimensions":{"location":"global","model":"gemini-2.0-flash"}}]},{"@type":"type.googleapis.com/google.rpc.RetryInfo","retryDelay":"58s"}] 
+/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:121
+        throw e;
+        ^
+
+Error: The module '/home/jblee/openclaw-lite/node_modules/better-sqlite3/build/Release/better_sqlite3.node'
+was compiled against a different Node.js version using
+NODE_MODULE_VERSION 137. This version of Node.js requires
+NODE_MODULE_VERSION 127. Please try re-compiling or re-installing
+the module (for instance, using `npm rebuild` or `npm install`).
+    at Object..node (node:internal/modules/cjs/loader:1865:18)
+    at Module.load (node:internal/modules/cjs/loader:1441:32)
+    at Function._load (node:internal/modules/cjs/loader:1263:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+    at Module.require (node:internal/modules/cjs/loader:1463:12)
+    at require (node:internal/modules/helpers:147:16)
+    at bindings (/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:112:48)
+    at new Database (/home/jblee/openclaw-lite/node_modules/better-sqlite3/lib/database.js:48:64)
+    at Object.<anonymous> (/home/jblee/openclaw-lite/dist/lib/db.js:61:12) {
+  code: 'ERR_DLOPEN_FAILED'
+}
+
+Node.js v22.22.0
+/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:121
+        throw e;
+        ^
+
+Error: The module '/home/jblee/openclaw-lite/node_modules/better-sqlite3/build/Release/better_sqlite3.node'
+was compiled against a different Node.js version using
+NODE_MODULE_VERSION 137. This version of Node.js requires
+NODE_MODULE_VERSION 127. Please try re-compiling or re-installing
+the module (for instance, using `npm rebuild` or `npm install`).
+    at Object..node (node:internal/modules/cjs/loader:1865:18)
+    at Module.load (node:internal/modules/cjs/loader:1441:32)
+    at Function._load (node:internal/modules/cjs/loader:1263:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+    at Module.require (node:internal/modules/cjs/loader:1463:12)
+    at require (node:internal/modules/helpers:147:16)
+    at bindings (/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:112:48)
+    at new Database (/home/jblee/openclaw-lite/node_modules/better-sqlite3/lib/database.js:48:64)
+    at Object.<anonymous> (/home/jblee/openclaw-lite/dist/lib/db.js:61:12) {
+  code: 'ERR_DLOPEN_FAILED'
+}
+
+Node.js v22.22.0
+/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:121
+        throw e;
+        ^
+
+Error: The module '/home/jblee/openclaw-lite/node_modules/better-sqlite3/build/Release/better_sqlite3.node'
+was compiled against a different Node.js version using
+NODE_MODULE_VERSION 137. This version of Node.js requires
+NODE_MODULE_VERSION 127. Please try re-compiling or re-installing
+the module (for instance, using `npm rebuild` or `npm install`).
+    at Object..node (node:internal/modules/cjs/loader:1865:18)
+    at Module.load (node:internal/modules/cjs/loader:1441:32)
+    at Function._load (node:internal/modules/cjs/loader:1263:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+    at Module.require (node:internal/modules/cjs/loader:1463:12)
+    at require (node:internal/modules/helpers:147:16)
+    at bindings (/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:112:48)
+    at new Database (/home/jblee/openclaw-lite/node_modules/better-sqlite3/lib/database.js:48:64)
+    at Object.<anonymous> (/home/jblee/openclaw-lite/dist/lib/db.js:61:12) {
+  code: 'ERR_DLOPEN_FAILED'
+}
+
+Node.js v22.22.0
+/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:121
+        throw e;
+        ^
+
+Error: The module '/home/jblee/openclaw-lite/node_modules/better-sqlite3/build/Release/better_sqlite3.node'
+was compiled against a different Node.js version using
+NODE_MODULE_VERSION 137. This version of Node.js requires
+NODE_MODULE_VERSION 127. Please try re-compiling or re-installing
+the module (for instance, using `npm rebuild` or `npm install`).
+    at Object..node (node:internal/modules/cjs/loader:1865:18)
+    at Module.load (node:internal/modules/cjs/loader:1441:32)
+    at Function._load (node:internal/modules/cjs/loader:1263:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+    at Module.require (node:internal/modules/cjs/loader:1463:12)
+    at require (node:internal/modules/helpers:147:16)
+    at bindings (/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:112:48)
+    at new Database (/home/jblee/openclaw-lite/node_modules/better-sqlite3/lib/database.js:48:64)
+    at Object.<anonymous> (/home/jblee/openclaw-lite/dist/lib/db.js:61:12) {
+  code: 'ERR_DLOPEN_FAILED'
+}
+
+Node.js v22.22.0
+/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:121
+        throw e;
+        ^
+
+Error: The module '/home/jblee/openclaw-lite/node_modules/better-sqlite3/build/Release/better_sqlite3.node'
+was compiled against a different Node.js version using
+NODE_MODULE_VERSION 137. This version of Node.js requires
+NODE_MODULE_VERSION 127. Please try re-compiling or re-installing
+the module (for instance, using `npm rebuild` or `npm install`).
+    at Object..node (node:internal/modules/cjs/loader:1865:18)
+    at Module.load (node:internal/modules/cjs/loader:1441:32)
+    at Function._load (node:internal/modules/cjs/loader:1263:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+    at Module.require (node:internal/modules/cjs/loader:1463:12)
+    at require (node:internal/modules/helpers:147:16)
+    at bindings (/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:112:48)
+    at new Database (/home/jblee/openclaw-lite/node_modules/better-sqlite3/lib/database.js:48:64)
+    at Object.<anonymous> (/home/jblee/openclaw-lite/dist/lib/db.js:61:12) {
+  code: 'ERR_DLOPEN_FAILED'
+}
+
+Node.js v22.22.0
+/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:121
+        throw e;
+        ^
+
+Error: The module '/home/jblee/openclaw-lite/node_modules/better-sqlite3/build/Release/better_sqlite3.node'
+was compiled against a different Node.js version using
+NODE_MODULE_VERSION 137. This version of Node.js requires
+NODE_MODULE_VERSION 127. Please try re-compiling or re-installing
+the module (for instance, using `npm rebuild` or `npm install`).
+    at Object..node (node:internal/modules/cjs/loader:1865:18)
+    at Module.load (node:internal/modules/cjs/loader:1441:32)
+    at Function._load (node:internal/modules/cjs/loader:1263:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+    at Module.require (node:internal/modules/cjs/loader:1463:12)
+    at require (node:internal/modules/helpers:147:16)
+    at bindings (/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:112:48)
+    at new Database (/home/jblee/openclaw-lite/node_modules/better-sqlite3/lib/database.js:48:64)
+    at Object.<anonymous> (/home/jblee/openclaw-lite/dist/lib/db.js:61:12) {
+  code: 'ERR_DLOPEN_FAILED'
+}
+
+Node.js v22.22.0
+/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:121
+        throw e;
+        ^
+
+Error: The module '/home/jblee/openclaw-lite/node_modules/better-sqlite3/build/Release/better_sqlite3.node'
+was compiled against a different Node.js version using
+NODE_MODULE_VERSION 137. This version of Node.js requires
+NODE_MODULE_VERSION 127. Please try re-compiling or re-installing
+the module (for instance, using `npm rebuild` or `npm install`).
+    at Object..node (node:internal/modules/cjs/loader:1865:18)
+    at Module.load (node:internal/modules/cjs/loader:1441:32)
+    at Function._load (node:internal/modules/cjs/loader:1263:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+    at Module.require (node:internal/modules/cjs/loader:1463:12)
+    at require (node:internal/modules/helpers:147:16)
+    at bindings (/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:112:48)
+    at new Database (/home/jblee/openclaw-lite/node_modules/better-sqlite3/lib/database.js:48:64)
+    at Object.<anonymous> (/home/jblee/openclaw-lite/dist/lib/db.js:61:12) {
+  code: 'ERR_DLOPEN_FAILED'
+}
+
+Node.js v22.22.0
+/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:121
+        throw e;
+        ^
+
+Error: The module '/home/jblee/openclaw-lite/node_modules/better-sqlite3/build/Release/better_sqlite3.node'
+was compiled against a different Node.js version using
+NODE_MODULE_VERSION 137. This version of Node.js requires
+NODE_MODULE_VERSION 127. Please try re-compiling or re-installing
+the module (for instance, using `npm rebuild` or `npm install`).
+    at Object..node (node:internal/modules/cjs/loader:1865:18)
+    at Module.load (node:internal/modules/cjs/loader:1441:32)
+    at Function._load (node:internal/modules/cjs/loader:1263:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+    at Module.require (node:internal/modules/cjs/loader:1463:12)
+    at require (node:internal/modules/helpers:147:16)
+    at bindings (/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:112:48)
+    at new Database (/home/jblee/openclaw-lite/node_modules/better-sqlite3/lib/database.js:48:64)
+    at Object.<anonymous> (/home/jblee/openclaw-lite/dist/lib/db.js:61:12) {
+  code: 'ERR_DLOPEN_FAILED'
+}
+
+Node.js v22.22.0
+/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:121
+        throw e;
+        ^
+
+Error: The module '/home/jblee/openclaw-lite/node_modules/better-sqlite3/build/Release/better_sqlite3.node'
+was compiled against a different Node.js version using
+NODE_MODULE_VERSION 137. This version of Node.js requires
+NODE_MODULE_VERSION 127. Please try re-compiling or re-installing
+the module (for instance, using `npm rebuild` or `npm install`).
+    at Object..node (node:internal/modules/cjs/loader:1865:18)
+    at Module.load (node:internal/modules/cjs/loader:1441:32)
+    at Function._load (node:internal/modules/cjs/loader:1263:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+    at Module.require (node:internal/modules/cjs/loader:1463:12)
+    at require (node:internal/modules/helpers:147:16)
+    at bindings (/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:112:48)
+    at new Database (/home/jblee/openclaw-lite/node_modules/better-sqlite3/lib/database.js:48:64)
+    at Object.<anonymous> (/home/jblee/openclaw-lite/dist/lib/db.js:61:12) {
+  code: 'ERR_DLOPEN_FAILED'
+}
+
+Node.js v22.22.0
+/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:121
+        throw e;
+        ^
+
+Error: The module '/home/jblee/openclaw-lite/node_modules/better-sqlite3/build/Release/better_sqlite3.node'
+was compiled against a different Node.js version using
+NODE_MODULE_VERSION 137. This version of Node.js requires
+NODE_MODULE_VERSION 127. Please try re-compiling or re-installing
+the module (for instance, using `npm rebuild` or `npm install`).
+    at Object..node (node:internal/modules/cjs/loader:1865:18)
+    at Module.load (node:internal/modules/cjs/loader:1441:32)
+    at Function._load (node:internal/modules/cjs/loader:1263:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+    at Module.require (node:internal/modules/cjs/loader:1463:12)
+    at require (node:internal/modules/helpers:147:16)
+    at bindings (/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:112:48)
+    at new Database (/home/jblee/openclaw-lite/node_modules/better-sqlite3/lib/database.js:48:64)
+    at Object.<anonymous> (/home/jblee/openclaw-lite/dist/lib/db.js:61:12) {
+  code: 'ERR_DLOPEN_FAILED'
+}
+
+Node.js v22.22.0
+/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:121
+        throw e;
+        ^
+
+Error: The module '/home/jblee/openclaw-lite/node_modules/better-sqlite3/build/Release/better_sqlite3.node'
+was compiled against a different Node.js version using
+NODE_MODULE_VERSION 137. This version of Node.js requires
+NODE_MODULE_VERSION 127. Please try re-compiling or re-installing
+the module (for instance, using `npm rebuild` or `npm install`).
+    at Object..node (node:internal/modules/cjs/loader:1865:18)
+    at Module.load (node:internal/modules/cjs/loader:1441:32)
+    at Function._load (node:internal/modules/cjs/loader:1263:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+    at Module.require (node:internal/modules/cjs/loader:1463:12)
+    at require (node:internal/modules/helpers:147:16)
+    at bindings (/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:112:48)
+    at new Database (/home/jblee/openclaw-lite/node_modules/better-sqlite3/lib/database.js:48:64)
+    at Object.<anonymous> (/home/jblee/openclaw-lite/dist/lib/db.js:61:12) {
+  code: 'ERR_DLOPEN_FAILED'
+}
+
+Node.js v22.22.0
+/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:121
+        throw e;
+        ^
+
+Error: The module '/home/jblee/openclaw-lite/node_modules/better-sqlite3/build/Release/better_sqlite3.node'
+was compiled against a different Node.js version using
+NODE_MODULE_VERSION 137. This version of Node.js requires
+NODE_MODULE_VERSION 127. Please try re-compiling or re-installing
+the module (for instance, using `npm rebuild` or `npm install`).
+    at Object..node (node:internal/modules/cjs/loader:1865:18)
+    at Module.load (node:internal/modules/cjs/loader:1441:32)
+    at Function._load (node:internal/modules/cjs/loader:1263:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+    at Module.require (node:internal/modules/cjs/loader:1463:12)
+    at require (node:internal/modules/helpers:147:16)
+    at bindings (/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:112:48)
+    at new Database (/home/jblee/openclaw-lite/node_modules/better-sqlite3/lib/database.js:48:64)
+    at Object.<anonymous> (/home/jblee/openclaw-lite/dist/lib/db.js:61:12) {
+  code: 'ERR_DLOPEN_FAILED'
+}
+
+Node.js v22.22.0
+/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:121
+        throw e;
+        ^
+
+Error: The module '/home/jblee/openclaw-lite/node_modules/better-sqlite3/build/Release/better_sqlite3.node'
+was compiled against a different Node.js version using
+NODE_MODULE_VERSION 137. This version of Node.js requires
+NODE_MODULE_VERSION 127. Please try re-compiling or re-installing
+the module (for instance, using `npm rebuild` or `npm install`).
+    at Object..node (node:internal/modules/cjs/loader:1865:18)
+    at Module.load (node:internal/modules/cjs/loader:1441:32)
+    at Function._load (node:internal/modules/cjs/loader:1263:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+    at Module.require (node:internal/modules/cjs/loader:1463:12)
+    at require (node:internal/modules/helpers:147:16)
+    at bindings (/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:112:48)
+    at new Database (/home/jblee/openclaw-lite/node_modules/better-sqlite3/lib/database.js:48:64)
+    at Object.<anonymous> (/home/jblee/openclaw-lite/dist/lib/db.js:61:12) {
+  code: 'ERR_DLOPEN_FAILED'
+}
+
+Node.js v22.22.0
+/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:121
+        throw e;
+        ^
+
+Error: The module '/home/jblee/openclaw-lite/node_modules/better-sqlite3/build/Release/better_sqlite3.node'
+was compiled against a different Node.js version using
+NODE_MODULE_VERSION 137. This version of Node.js requires
+NODE_MODULE_VERSION 127. Please try re-compiling or re-installing
+the module (for instance, using `npm rebuild` or `npm install`).
+    at Object..node (node:internal/modules/cjs/loader:1865:18)
+    at Module.load (node:internal/modules/cjs/loader:1441:32)
+    at Function._load (node:internal/modules/cjs/loader:1263:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+    at Module.require (node:internal/modules/cjs/loader:1463:12)
+    at require (node:internal/modules/helpers:147:16)
+    at bindings (/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:112:48)
+    at new Database (/home/jblee/openclaw-lite/node_modules/better-sqlite3/lib/database.js:48:64)
+    at Object.<anonymous> (/home/jblee/openclaw-lite/dist/lib/db.js:61:12) {
+  code: 'ERR_DLOPEN_FAILED'
+}
+
+Node.js v22.22.0
+/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:121
+        throw e;
+        ^
+
+Error: The module '/home/jblee/openclaw-lite/node_modules/better-sqlite3/build/Release/better_sqlite3.node'
+was compiled against a different Node.js version using
+NODE_MODULE_VERSION 137. This version of Node.js requires
+NODE_MODULE_VERSION 127. Please try re-compiling or re-installing
+the module (for instance, using `npm rebuild` or `npm install`).
+    at Object..node (node:internal/modules/cjs/loader:1865:18)
+    at Module.load (node:internal/modules/cjs/loader:1441:32)
+    at Function._load (node:internal/modules/cjs/loader:1263:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+    at Module.require (node:internal/modules/cjs/loader:1463:12)
+    at require (node:internal/modules/helpers:147:16)
+    at bindings (/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:112:48)
+    at new Database (/home/jblee/openclaw-lite/node_modules/better-sqlite3/lib/database.js:48:64)
+    at Object.<anonymous> (/home/jblee/openclaw-lite/dist/lib/db.js:61:12) {
+  code: 'ERR_DLOPEN_FAILED'
+}
+
+Node.js v22.22.0
+/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:121
+        throw e;
+        ^
+
+Error: The module '/home/jblee/openclaw-lite/node_modules/better-sqlite3/build/Release/better_sqlite3.node'
+was compiled against a different Node.js version using
+NODE_MODULE_VERSION 137. This version of Node.js requires
+NODE_MODULE_VERSION 127. Please try re-compiling or re-installing
+the module (for instance, using `npm rebuild` or `npm install`).
+    at Object..node (node:internal/modules/cjs/loader:1865:18)
+    at Module.load (node:internal/modules/cjs/loader:1441:32)
+    at Function._load (node:internal/modules/cjs/loader:1263:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+    at Module.require (node:internal/modules/cjs/loader:1463:12)
+    at require (node:internal/modules/helpers:147:16)
+    at bindings (/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:112:48)
+    at new Database (/home/jblee/openclaw-lite/node_modules/better-sqlite3/lib/database.js:48:64)
+    at Object.<anonymous> (/home/jblee/openclaw-lite/dist/lib/db.js:61:12) {
+  code: 'ERR_DLOPEN_FAILED'
+}
+
+Node.js v22.22.0
+/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:121
+        throw e;
+        ^
+
+Error: The module '/home/jblee/openclaw-lite/node_modules/better-sqlite3/build/Release/better_sqlite3.node'
+was compiled against a different Node.js version using
+NODE_MODULE_VERSION 137. This version of Node.js requires
+NODE_MODULE_VERSION 127. Please try re-compiling or re-installing
+the module (for instance, using `npm rebuild` or `npm install`).
+    at Object..node (node:internal/modules/cjs/loader:1865:18)
+    at Module.load (node:internal/modules/cjs/loader:1441:32)
+    at Function._load (node:internal/modules/cjs/loader:1263:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+    at Module.require (node:internal/modules/cjs/loader:1463:12)
+    at require (node:internal/modules/helpers:147:16)
+    at bindings (/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:112:48)
+    at new Database (/home/jblee/openclaw-lite/node_modules/better-sqlite3/lib/database.js:48:64)
+    at Object.<anonymous> (/home/jblee/openclaw-lite/dist/lib/db.js:61:12) {
+  code: 'ERR_DLOPEN_FAILED'
+}
+
+Node.js v22.22.0
+/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:121
+        throw e;
+        ^
+
+Error: The module '/home/jblee/openclaw-lite/node_modules/better-sqlite3/build/Release/better_sqlite3.node'
+was compiled against a different Node.js version using
+NODE_MODULE_VERSION 137. This version of Node.js requires
+NODE_MODULE_VERSION 127. Please try re-compiling or re-installing
+the module (for instance, using `npm rebuild` or `npm install`).
+    at Object..node (node:internal/modules/cjs/loader:1865:18)
+    at Module.load (node:internal/modules/cjs/loader:1441:32)
+    at Function._load (node:internal/modules/cjs/loader:1263:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+    at Module.require (node:internal/modules/cjs/loader:1463:12)
+    at require (node:internal/modules/helpers:147:16)
+    at bindings (/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:112:48)
+    at new Database (/home/jblee/openclaw-lite/node_modules/better-sqlite3/lib/database.js:48:64)
+    at Object.<anonymous> (/home/jblee/openclaw-lite/dist/lib/db.js:61:12) {
+  code: 'ERR_DLOPEN_FAILED'
+}
+
+Node.js v22.22.0
+/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:121
+        throw e;
+        ^
+
+Error: The module '/home/jblee/openclaw-lite/node_modules/better-sqlite3/build/Release/better_sqlite3.node'
+was compiled against a different Node.js version using
+NODE_MODULE_VERSION 137. This version of Node.js requires
+NODE_MODULE_VERSION 127. Please try re-compiling or re-installing
+the module (for instance, using `npm rebuild` or `npm install`).
+    at Object..node (node:internal/modules/cjs/loader:1865:18)
+    at Module.load (node:internal/modules/cjs/loader:1441:32)
+    at Function._load (node:internal/modules/cjs/loader:1263:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+    at Module.require (node:internal/modules/cjs/loader:1463:12)
+    at require (node:internal/modules/helpers:147:16)
+    at bindings (/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:112:48)
+    at new Database (/home/jblee/openclaw-lite/node_modules/better-sqlite3/lib/database.js:48:64)
+    at Object.<anonymous> (/home/jblee/openclaw-lite/dist/lib/db.js:61:12) {
+  code: 'ERR_DLOPEN_FAILED'
+}
+
+Node.js v22.22.0
+/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:121
+        throw e;
+        ^
+
+Error: The module '/home/jblee/openclaw-lite/node_modules/better-sqlite3/build/Release/better_sqlite3.node'
+was compiled against a different Node.js version using
+NODE_MODULE_VERSION 137. This version of Node.js requires
+NODE_MODULE_VERSION 127. Please try re-compiling or re-installing
+the module (for instance, using `npm rebuild` or `npm install`).
+    at Object..node (node:internal/modules/cjs/loader:1865:18)
+    at Module.load (node:internal/modules/cjs/loader:1441:32)
+    at Function._load (node:internal/modules/cjs/loader:1263:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+    at Module.require (node:internal/modules/cjs/loader:1463:12)
+    at require (node:internal/modules/helpers:147:16)
+    at bindings (/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:112:48)
+    at new Database (/home/jblee/openclaw-lite/node_modules/better-sqlite3/lib/database.js:48:64)
+    at Object.<anonymous> (/home/jblee/openclaw-lite/dist/lib/db.js:61:12) {
+  code: 'ERR_DLOPEN_FAILED'
+}
+
+Node.js v22.22.0
+/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:121
+        throw e;
+        ^
+
+Error: The module '/home/jblee/openclaw-lite/node_modules/better-sqlite3/build/Release/better_sqlite3.node'
+was compiled against a different Node.js version using
+NODE_MODULE_VERSION 137. This version of Node.js requires
+NODE_MODULE_VERSION 127. Please try re-compiling or re-installing
+the module (for instance, using `npm rebuild` or `npm install`).
+    at Object..node (node:internal/modules/cjs/loader:1865:18)
+    at Module.load (node:internal/modules/cjs/loader:1441:32)
+    at Function._load (node:internal/modules/cjs/loader:1263:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+    at Module.require (node:internal/modules/cjs/loader:1463:12)
+    at require (node:internal/modules/helpers:147:16)
+    at bindings (/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:112:48)
+    at new Database (/home/jblee/openclaw-lite/node_modules/better-sqlite3/lib/database.js:48:64)
+    at Object.<anonymous> (/home/jblee/openclaw-lite/dist/lib/db.js:61:12) {
+  code: 'ERR_DLOPEN_FAILED'
+}
+
+Node.js v22.22.0
+/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:121
+        throw e;
+        ^
+
+Error: The module '/home/jblee/openclaw-lite/node_modules/better-sqlite3/build/Release/better_sqlite3.node'
+was compiled against a different Node.js version using
+NODE_MODULE_VERSION 137. This version of Node.js requires
+NODE_MODULE_VERSION 127. Please try re-compiling or re-installing
+the module (for instance, using `npm rebuild` or `npm install`).
+    at Object..node (node:internal/modules/cjs/loader:1865:18)
+    at Module.load (node:internal/modules/cjs/loader:1441:32)
+    at Function._load (node:internal/modules/cjs/loader:1263:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+    at Module.require (node:internal/modules/cjs/loader:1463:12)
+    at require (node:internal/modules/helpers:147:16)
+    at bindings (/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:112:48)
+    at new Database (/home/jblee/openclaw-lite/node_modules/better-sqlite3/lib/database.js:48:64)
+    at Object.<anonymous> (/home/jblee/openclaw-lite/dist/lib/db.js:61:12) {
+  code: 'ERR_DLOPEN_FAILED'
+}
+
+Node.js v22.22.0
+/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:121
+        throw e;
+        ^
+
+Error: The module '/home/jblee/openclaw-lite/node_modules/better-sqlite3/build/Release/better_sqlite3.node'
+was compiled against a different Node.js version using
+NODE_MODULE_VERSION 137. This version of Node.js requires
+NODE_MODULE_VERSION 127. Please try re-compiling or re-installing
+the module (for instance, using `npm rebuild` or `npm install`).
+    at Object..node (node:internal/modules/cjs/loader:1865:18)
+    at Module.load (node:internal/modules/cjs/loader:1441:32)
+    at Function._load (node:internal/modules/cjs/loader:1263:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+    at Module.require (node:internal/modules/cjs/loader:1463:12)
+    at require (node:internal/modules/helpers:147:16)
+    at bindings (/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:112:48)
+    at new Database (/home/jblee/openclaw-lite/node_modules/better-sqlite3/lib/database.js:48:64)
+    at Object.<anonymous> (/home/jblee/openclaw-lite/dist/lib/db.js:61:12) {
+  code: 'ERR_DLOPEN_FAILED'
+}
+
+Node.js v22.22.0
+/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:121
+        throw e;
+        ^
+
+Error: The module '/home/jblee/openclaw-lite/node_modules/better-sqlite3/build/Release/better_sqlite3.node'
+was compiled against a different Node.js version using
+NODE_MODULE_VERSION 137. This version of Node.js requires
+NODE_MODULE_VERSION 127. Please try re-compiling or re-installing
+the module (for instance, using `npm rebuild` or `npm install`).
+    at Object..node (node:internal/modules/cjs/loader:1865:18)
+    at Module.load (node:internal/modules/cjs/loader:1441:32)
+    at Function._load (node:internal/modules/cjs/loader:1263:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+    at Module.require (node:internal/modules/cjs/loader:1463:12)
+    at require (node:internal/modules/helpers:147:16)
+    at bindings (/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:112:48)
+    at new Database (/home/jblee/openclaw-lite/node_modules/better-sqlite3/lib/database.js:48:64)
+    at Object.<anonymous> (/home/jblee/openclaw-lite/dist/lib/db.js:61:12) {
+  code: 'ERR_DLOPEN_FAILED'
+}
+
+Node.js v22.22.0
+/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:121
+        throw e;
+        ^
+
+Error: The module '/home/jblee/openclaw-lite/node_modules/better-sqlite3/build/Release/better_sqlite3.node'
+was compiled against a different Node.js version using
+NODE_MODULE_VERSION 137. This version of Node.js requires
+NODE_MODULE_VERSION 127. Please try re-compiling or re-installing
+the module (for instance, using `npm rebuild` or `npm install`).
+    at Object..node (node:internal/modules/cjs/loader:1865:18)
+    at Module.load (node:internal/modules/cjs/loader:1441:32)
+    at Function._load (node:internal/modules/cjs/loader:1263:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+    at Module.require (node:internal/modules/cjs/loader:1463:12)
+    at require (node:internal/modules/helpers:147:16)
+    at bindings (/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:112:48)
+    at new Database (/home/jblee/openclaw-lite/node_modules/better-sqlite3/lib/database.js:48:64)
+    at Object.<anonymous> (/home/jblee/openclaw-lite/dist/lib/db.js:61:12) {
+  code: 'ERR_DLOPEN_FAILED'
+}
+
+Node.js v22.22.0
+/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:121
+        throw e;
+        ^
+
+Error: The module '/home/jblee/openclaw-lite/node_modules/better-sqlite3/build/Release/better_sqlite3.node'
+was compiled against a different Node.js version using
+NODE_MODULE_VERSION 137. This version of Node.js requires
+NODE_MODULE_VERSION 127. Please try re-compiling or re-installing
+the module (for instance, using `npm rebuild` or `npm install`).
+    at Object..node (node:internal/modules/cjs/loader:1865:18)
+    at Module.load (node:internal/modules/cjs/loader:1441:32)
+    at Function._load (node:internal/modules/cjs/loader:1263:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+    at Module.require (node:internal/modules/cjs/loader:1463:12)
+    at require (node:internal/modules/helpers:147:16)
+    at bindings (/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:112:48)
+    at new Database (/home/jblee/openclaw-lite/node_modules/better-sqlite3/lib/database.js:48:64)
+    at Object.<anonymous> (/home/jblee/openclaw-lite/dist/lib/db.js:61:12) {
+  code: 'ERR_DLOPEN_FAILED'
+}
+
+Node.js v22.22.0
+/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:121
+        throw e;
+        ^
+
+Error: The module '/home/jblee/openclaw-lite/node_modules/better-sqlite3/build/Release/better_sqlite3.node'
+was compiled against a different Node.js version using
+NODE_MODULE_VERSION 137. This version of Node.js requires
+NODE_MODULE_VERSION 127. Please try re-compiling or re-installing
+the module (for instance, using `npm rebuild` or `npm install`).
+    at Object..node (node:internal/modules/cjs/loader:1865:18)
+    at Module.load (node:internal/modules/cjs/loader:1441:32)
+    at Function._load (node:internal/modules/cjs/loader:1263:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+    at Module.require (node:internal/modules/cjs/loader:1463:12)
+    at require (node:internal/modules/helpers:147:16)
+    at bindings (/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:112:48)
+    at new Database (/home/jblee/openclaw-lite/node_modules/better-sqlite3/lib/database.js:48:64)
+    at Object.<anonymous> (/home/jblee/openclaw-lite/dist/lib/db.js:61:12) {
+  code: 'ERR_DLOPEN_FAILED'
+}
+
+Node.js v22.22.0
+/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:121
+        throw e;
+        ^
+
+Error: The module '/home/jblee/openclaw-lite/node_modules/better-sqlite3/build/Release/better_sqlite3.node'
+was compiled against a different Node.js version using
+NODE_MODULE_VERSION 137. This version of Node.js requires
+NODE_MODULE_VERSION 127. Please try re-compiling or re-installing
+the module (for instance, using `npm rebuild` or `npm install`).
+    at Object..node (node:internal/modules/cjs/loader:1865:18)
+    at Module.load (node:internal/modules/cjs/loader:1441:32)
+    at Function._load (node:internal/modules/cjs/loader:1263:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+    at Module.require (node:internal/modules/cjs/loader:1463:12)
+    at require (node:internal/modules/helpers:147:16)
+    at bindings (/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:112:48)
+    at new Database (/home/jblee/openclaw-lite/node_modules/better-sqlite3/lib/database.js:48:64)
+    at Object.<anonymous> (/home/jblee/openclaw-lite/dist/lib/db.js:61:12) {
+  code: 'ERR_DLOPEN_FAILED'
+}
+
+Node.js v22.22.0
+/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:121
+        throw e;
+        ^
+
+Error: The module '/home/jblee/openclaw-lite/node_modules/better-sqlite3/build/Release/better_sqlite3.node'
+was compiled against a different Node.js version using
+NODE_MODULE_VERSION 137. This version of Node.js requires
+NODE_MODULE_VERSION 127. Please try re-compiling or re-installing
+the module (for instance, using `npm rebuild` or `npm install`).
+    at Object..node (node:internal/modules/cjs/loader:1865:18)
+    at Module.load (node:internal/modules/cjs/loader:1441:32)
+    at Function._load (node:internal/modules/cjs/loader:1263:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+    at Module.require (node:internal/modules/cjs/loader:1463:12)
+    at require (node:internal/modules/helpers:147:16)
+    at bindings (/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:112:48)
+    at new Database (/home/jblee/openclaw-lite/node_modules/better-sqlite3/lib/database.js:48:64)
+    at Object.<anonymous> (/home/jblee/openclaw-lite/dist/lib/db.js:61:12) {
+  code: 'ERR_DLOPEN_FAILED'
+}
+
+Node.js v22.22.0
+/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:121
+        throw e;
+        ^
+
+Error: The module '/home/jblee/openclaw-lite/node_modules/better-sqlite3/build/Release/better_sqlite3.node'
+was compiled against a different Node.js version using
+NODE_MODULE_VERSION 137. This version of Node.js requires
+NODE_MODULE_VERSION 127. Please try re-compiling or re-installing
+the module (for instance, using `npm rebuild` or `npm install`).
+    at Object..node (node:internal/modules/cjs/loader:1865:18)
+    at Module.load (node:internal/modules/cjs/loader:1441:32)
+    at Function._load (node:internal/modules/cjs/loader:1263:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+    at Module.require (node:internal/modules/cjs/loader:1463:12)
+    at require (node:internal/modules/helpers:147:16)
+    at bindings (/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:112:48)
+    at new Database (/home/jblee/openclaw-lite/node_modules/better-sqlite3/lib/database.js:48:64)
+    at Object.<anonymous> (/home/jblee/openclaw-lite/dist/lib/db.js:61:12) {
+  code: 'ERR_DLOPEN_FAILED'
+}
+
+Node.js v22.22.0
+/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:121
+        throw e;
+        ^
+
+Error: The module '/home/jblee/openclaw-lite/node_modules/better-sqlite3/build/Release/better_sqlite3.node'
+was compiled against a different Node.js version using
+NODE_MODULE_VERSION 137. This version of Node.js requires
+NODE_MODULE_VERSION 127. Please try re-compiling or re-installing
+the module (for instance, using `npm rebuild` or `npm install`).
+    at Object..node (node:internal/modules/cjs/loader:1865:18)
+    at Module.load (node:internal/modules/cjs/loader:1441:32)
+    at Function._load (node:internal/modules/cjs/loader:1263:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+    at Module.require (node:internal/modules/cjs/loader:1463:12)
+    at require (node:internal/modules/helpers:147:16)
+    at bindings (/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:112:48)
+    at new Database (/home/jblee/openclaw-lite/node_modules/better-sqlite3/lib/database.js:48:64)
+    at Object.<anonymous> (/home/jblee/openclaw-lite/dist/lib/db.js:61:12) {
+  code: 'ERR_DLOPEN_FAILED'
+}
+
+Node.js v22.22.0
+/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:121
+        throw e;
+        ^
+
+Error: The module '/home/jblee/openclaw-lite/node_modules/better-sqlite3/build/Release/better_sqlite3.node'
+was compiled against a different Node.js version using
+NODE_MODULE_VERSION 137. This version of Node.js requires
+NODE_MODULE_VERSION 127. Please try re-compiling or re-installing
+the module (for instance, using `npm rebuild` or `npm install`).
+    at Object..node (node:internal/modules/cjs/loader:1865:18)
+    at Module.load (node:internal/modules/cjs/loader:1441:32)
+    at Function._load (node:internal/modules/cjs/loader:1263:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+    at Module.require (node:internal/modules/cjs/loader:1463:12)
+    at require (node:internal/modules/helpers:147:16)
+    at bindings (/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:112:48)
+    at new Database (/home/jblee/openclaw-lite/node_modules/better-sqlite3/lib/database.js:48:64)
+    at Object.<anonymous> (/home/jblee/openclaw-lite/dist/lib/db.js:61:12) {
+  code: 'ERR_DLOPEN_FAILED'
+}
+
+Node.js v22.22.0
+/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:121
+        throw e;
+        ^
+
+Error: The module '/home/jblee/openclaw-lite/node_modules/better-sqlite3/build/Release/better_sqlite3.node'
+was compiled against a different Node.js version using
+NODE_MODULE_VERSION 137. This version of Node.js requires
+NODE_MODULE_VERSION 127. Please try re-compiling or re-installing
+the module (for instance, using `npm rebuild` or `npm install`).
+    at Object..node (node:internal/modules/cjs/loader:1865:18)
+    at Module.load (node:internal/modules/cjs/loader:1441:32)
+    at Function._load (node:internal/modules/cjs/loader:1263:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+    at Module.require (node:internal/modules/cjs/loader:1463:12)
+    at require (node:internal/modules/helpers:147:16)
+    at bindings (/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:112:48)
+    at new Database (/home/jblee/openclaw-lite/node_modules/better-sqlite3/lib/database.js:48:64)
+    at Object.<anonymous> (/home/jblee/openclaw-lite/dist/lib/db.js:61:12) {
+  code: 'ERR_DLOPEN_FAILED'
+}
+
+Node.js v22.22.0
+[2026-02-04 12:35:03] ERROR: Gemini: [GoogleGenerativeAI Error]: Error fetching from https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent: [429 Too Many Requests] You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. 
+* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-2.0-flash
+* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-2.0-flash
+* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_input_token_count, limit: 0, model: gemini-2.0-flash
+Please retry in 55.92966443s. [{"@type":"type.googleapis.com/google.rpc.Help","links":[{"description":"Learn more about Gemini API quotas","url":"https://ai.google.dev/gemini-api/docs/rate-limits"}]},{"@type":"type.googleapis.com/google.rpc.QuotaFailure","violations":[{"quotaMetric":"generativelanguage.googleapis.com/generate_content_free_tier_requests","quotaId":"GenerateRequestsPerDayPerProjectPerModel-FreeTier","quotaDimensions":{"location":"global","model":"gemini-2.0-flash"}},{"quotaMetric":"generativelanguage.googleapis.com/generate_content_free_tier_requests","quotaId":"GenerateRequestsPerMinutePerProjectPerModel-FreeTier","quotaDimensions":{"location":"global","model":"gemini-2.0-flash"}},{"quotaMetric":"generativelanguage.googleapis.com/generate_content_free_tier_input_token_count","quotaId":"GenerateContentInputTokensPerModelPerMinute-FreeTier","quotaDimensions":{"location":"global","model":"gemini-2.0-flash"}}]},{"@type":"type.googleapis.com/google.rpc.RetryInfo","retryDelay":"55s"}] 
+/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:121
+        throw e;
+        ^
+
+Error: The module '/home/jblee/openclaw-lite/node_modules/better-sqlite3/build/Release/better_sqlite3.node'
+was compiled against a different Node.js version using
+NODE_MODULE_VERSION 137. This version of Node.js requires
+NODE_MODULE_VERSION 127. Please try re-compiling or re-installing
+the module (for instance, using `npm rebuild` or `npm install`).
+    at Object..node (node:internal/modules/cjs/loader:1865:18)
+    at Module.load (node:internal/modules/cjs/loader:1441:32)
+    at Function._load (node:internal/modules/cjs/loader:1263:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+    at Module.require (node:internal/modules/cjs/loader:1463:12)
+    at require (node:internal/modules/helpers:147:16)
+    at bindings (/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:112:48)
+    at new Database (/home/jblee/openclaw-lite/node_modules/better-sqlite3/lib/database.js:48:64)
+    at Object.<anonymous> (/home/jblee/openclaw-lite/dist/lib/db.js:61:12) {
+  code: 'ERR_DLOPEN_FAILED'
+}
+
+Node.js v22.22.0
+/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:121
+        throw e;
+        ^
+
+Error: The module '/home/jblee/openclaw-lite/node_modules/better-sqlite3/build/Release/better_sqlite3.node'
+was compiled against a different Node.js version using
+NODE_MODULE_VERSION 137. This version of Node.js requires
+NODE_MODULE_VERSION 127. Please try re-compiling or re-installing
+the module (for instance, using `npm rebuild` or `npm install`).
+    at Object..node (node:internal/modules/cjs/loader:1865:18)
+    at Module.load (node:internal/modules/cjs/loader:1441:32)
+    at Function._load (node:internal/modules/cjs/loader:1263:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+    at Module.require (node:internal/modules/cjs/loader:1463:12)
+    at require (node:internal/modules/helpers:147:16)
+    at bindings (/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:112:48)
+    at new Database (/home/jblee/openclaw-lite/node_modules/better-sqlite3/lib/database.js:48:64)
+    at Object.<anonymous> (/home/jblee/openclaw-lite/dist/lib/db.js:61:12) {
+  code: 'ERR_DLOPEN_FAILED'
+}
+
+Node.js v22.22.0
+/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:121
+        throw e;
+        ^
+
+Error: The module '/home/jblee/openclaw-lite/node_modules/better-sqlite3/build/Release/better_sqlite3.node'
+was compiled against a different Node.js version using
+NODE_MODULE_VERSION 137. This version of Node.js requires
+NODE_MODULE_VERSION 127. Please try re-compiling or re-installing
+the module (for instance, using `npm rebuild` or `npm install`).
+    at Object..node (node:internal/modules/cjs/loader:1865:18)
+    at Module.load (node:internal/modules/cjs/loader:1441:32)
+    at Function._load (node:internal/modules/cjs/loader:1263:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+    at Module.require (node:internal/modules/cjs/loader:1463:12)
+    at require (node:internal/modules/helpers:147:16)
+    at bindings (/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:112:48)
+    at new Database (/home/jblee/openclaw-lite/node_modules/better-sqlite3/lib/database.js:48:64)
+    at Object.<anonymous> (/home/jblee/openclaw-lite/dist/lib/db.js:61:12) {
+  code: 'ERR_DLOPEN_FAILED'
+}
+
+Node.js v22.22.0
+/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:121
+        throw e;
+        ^
+
+Error: The module '/home/jblee/openclaw-lite/node_modules/better-sqlite3/build/Release/better_sqlite3.node'
+was compiled against a different Node.js version using
+NODE_MODULE_VERSION 137. This version of Node.js requires
+NODE_MODULE_VERSION 127. Please try re-compiling or re-installing
+the module (for instance, using `npm rebuild` or `npm install`).
+    at Object..node (node:internal/modules/cjs/loader:1865:18)
+    at Module.load (node:internal/modules/cjs/loader:1441:32)
+    at Function._load (node:internal/modules/cjs/loader:1263:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+    at Module.require (node:internal/modules/cjs/loader:1463:12)
+    at require (node:internal/modules/helpers:147:16)
+    at bindings (/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:112:48)
+    at new Database (/home/jblee/openclaw-lite/node_modules/better-sqlite3/lib/database.js:48:64)
+    at Object.<anonymous> (/home/jblee/openclaw-lite/dist/lib/db.js:61:12) {
+  code: 'ERR_DLOPEN_FAILED'
+}
+
+Node.js v22.22.0
+/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:121
+        throw e;
+        ^
+
+Error: The module '/home/jblee/openclaw-lite/node_modules/better-sqlite3/build/Release/better_sqlite3.node'
+was compiled against a different Node.js version using
+NODE_MODULE_VERSION 137. This version of Node.js requires
+NODE_MODULE_VERSION 127. Please try re-compiling or re-installing
+the module (for instance, using `npm rebuild` or `npm install`).
+    at Object..node (node:internal/modules/cjs/loader:1865:18)
+    at Module.load (node:internal/modules/cjs/loader:1441:32)
+    at Function._load (node:internal/modules/cjs/loader:1263:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+    at Module.require (node:internal/modules/cjs/loader:1463:12)
+    at require (node:internal/modules/helpers:147:16)
+    at bindings (/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:112:48)
+    at new Database (/home/jblee/openclaw-lite/node_modules/better-sqlite3/lib/database.js:48:64)
+    at Object.<anonymous> (/home/jblee/openclaw-lite/dist/lib/db.js:61:12) {
+  code: 'ERR_DLOPEN_FAILED'
+}
+
+Node.js v22.22.0
+/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:121
+        throw e;
+        ^
+
+Error: The module '/home/jblee/openclaw-lite/node_modules/better-sqlite3/build/Release/better_sqlite3.node'
+was compiled against a different Node.js version using
+NODE_MODULE_VERSION 137. This version of Node.js requires
+NODE_MODULE_VERSION 127. Please try re-compiling or re-installing
+the module (for instance, using `npm rebuild` or `npm install`).
+    at Object..node (node:internal/modules/cjs/loader:1865:18)
+    at Module.load (node:internal/modules/cjs/loader:1441:32)
+    at Function._load (node:internal/modules/cjs/loader:1263:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+    at Module.require (node:internal/modules/cjs/loader:1463:12)
+    at require (node:internal/modules/helpers:147:16)
+    at bindings (/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:112:48)
+    at new Database (/home/jblee/openclaw-lite/node_modules/better-sqlite3/lib/database.js:48:64)
+    at Object.<anonymous> (/home/jblee/openclaw-lite/dist/lib/db.js:61:12) {
+  code: 'ERR_DLOPEN_FAILED'
+}
+
+Node.js v22.22.0
+/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:121
+        throw e;
+        ^
+
+Error: The module '/home/jblee/openclaw-lite/node_modules/better-sqlite3/build/Release/better_sqlite3.node'
+was compiled against a different Node.js version using
+NODE_MODULE_VERSION 137. This version of Node.js requires
+NODE_MODULE_VERSION 127. Please try re-compiling or re-installing
+the module (for instance, using `npm rebuild` or `npm install`).
+    at Object..node (node:internal/modules/cjs/loader:1865:18)
+    at Module.load (node:internal/modules/cjs/loader:1441:32)
+    at Function._load (node:internal/modules/cjs/loader:1263:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+    at Module.require (node:internal/modules/cjs/loader:1463:12)
+    at require (node:internal/modules/helpers:147:16)
+    at bindings (/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:112:48)
+    at new Database (/home/jblee/openclaw-lite/node_modules/better-sqlite3/lib/database.js:48:64)
+    at Object.<anonymous> (/home/jblee/openclaw-lite/dist/lib/db.js:61:12) {
+  code: 'ERR_DLOPEN_FAILED'
+}
+
+Node.js v22.22.0
+/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:121
+        throw e;
+        ^
+
+Error: The module '/home/jblee/openclaw-lite/node_modules/better-sqlite3/build/Release/better_sqlite3.node'
+was compiled against a different Node.js version using
+NODE_MODULE_VERSION 137. This version of Node.js requires
+NODE_MODULE_VERSION 127. Please try re-compiling or re-installing
+the module (for instance, using `npm rebuild` or `npm install`).
+    at Object..node (node:internal/modules/cjs/loader:1865:18)
+    at Module.load (node:internal/modules/cjs/loader:1441:32)
+    at Function._load (node:internal/modules/cjs/loader:1263:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+    at Module.require (node:internal/modules/cjs/loader:1463:12)
+    at require (node:internal/modules/helpers:147:16)
+    at bindings (/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:112:48)
+    at new Database (/home/jblee/openclaw-lite/node_modules/better-sqlite3/lib/database.js:48:64)
+    at Object.<anonymous> (/home/jblee/openclaw-lite/dist/lib/db.js:61:12) {
+  code: 'ERR_DLOPEN_FAILED'
+}
+
+Node.js v22.22.0
+/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:121
+        throw e;
+        ^
+
+Error: The module '/home/jblee/openclaw-lite/node_modules/better-sqlite3/build/Release/better_sqlite3.node'
+was compiled against a different Node.js version using
+NODE_MODULE_VERSION 137. This version of Node.js requires
+NODE_MODULE_VERSION 127. Please try re-compiling or re-installing
+the module (for instance, using `npm rebuild` or `npm install`).
+    at Object..node (node:internal/modules/cjs/loader:1865:18)
+    at Module.load (node:internal/modules/cjs/loader:1441:32)
+    at Function._load (node:internal/modules/cjs/loader:1263:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+    at Module.require (node:internal/modules/cjs/loader:1463:12)
+    at require (node:internal/modules/helpers:147:16)
+    at bindings (/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:112:48)
+    at new Database (/home/jblee/openclaw-lite/node_modules/better-sqlite3/lib/database.js:48:64)
+    at Object.<anonymous> (/home/jblee/openclaw-lite/dist/lib/db.js:61:12) {
+  code: 'ERR_DLOPEN_FAILED'
+}
+
+Node.js v22.22.0
+/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:121
+        throw e;
+        ^
+
+Error: The module '/home/jblee/openclaw-lite/node_modules/better-sqlite3/build/Release/better_sqlite3.node'
+was compiled against a different Node.js version using
+NODE_MODULE_VERSION 137. This version of Node.js requires
+NODE_MODULE_VERSION 127. Please try re-compiling or re-installing
+the module (for instance, using `npm rebuild` or `npm install`).
+    at Object..node (node:internal/modules/cjs/loader:1865:18)
+    at Module.load (node:internal/modules/cjs/loader:1441:32)
+    at Function._load (node:internal/modules/cjs/loader:1263:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+    at Module.require (node:internal/modules/cjs/loader:1463:12)
+    at require (node:internal/modules/helpers:147:16)
+    at bindings (/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:112:48)
+    at new Database (/home/jblee/openclaw-lite/node_modules/better-sqlite3/lib/database.js:48:64)
+    at Object.<anonymous> (/home/jblee/openclaw-lite/dist/lib/db.js:61:12) {
+  code: 'ERR_DLOPEN_FAILED'
+}
+
+Node.js v22.22.0
+/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:121
+        throw e;
+        ^
+
+Error: The module '/home/jblee/openclaw-lite/node_modules/better-sqlite3/build/Release/better_sqlite3.node'
+was compiled against a different Node.js version using
+NODE_MODULE_VERSION 137. This version of Node.js requires
+NODE_MODULE_VERSION 127. Please try re-compiling or re-installing
+the module (for instance, using `npm rebuild` or `npm install`).
+    at Object..node (node:internal/modules/cjs/loader:1865:18)
+    at Module.load (node:internal/modules/cjs/loader:1441:32)
+    at Function._load (node:internal/modules/cjs/loader:1263:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+    at Module.require (node:internal/modules/cjs/loader:1463:12)
+    at require (node:internal/modules/helpers:147:16)
+    at bindings (/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:112:48)
+    at new Database (/home/jblee/openclaw-lite/node_modules/better-sqlite3/lib/database.js:48:64)
+    at Object.<anonymous> (/home/jblee/openclaw-lite/dist/lib/db.js:61:12) {
+  code: 'ERR_DLOPEN_FAILED'
+}
+
+Node.js v22.22.0
+/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:121
+        throw e;
+        ^
+
+Error: The module '/home/jblee/openclaw-lite/node_modules/better-sqlite3/build/Release/better_sqlite3.node'
+was compiled against a different Node.js version using
+NODE_MODULE_VERSION 137. This version of Node.js requires
+NODE_MODULE_VERSION 127. Please try re-compiling or re-installing
+the module (for instance, using `npm rebuild` or `npm install`).
+    at Object..node (node:internal/modules/cjs/loader:1865:18)
+    at Module.load (node:internal/modules/cjs/loader:1441:32)
+    at Function._load (node:internal/modules/cjs/loader:1263:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+    at Module.require (node:internal/modules/cjs/loader:1463:12)
+    at require (node:internal/modules/helpers:147:16)
+    at bindings (/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:112:48)
+    at new Database (/home/jblee/openclaw-lite/node_modules/better-sqlite3/lib/database.js:48:64)
+    at Object.<anonymous> (/home/jblee/openclaw-lite/dist/lib/db.js:61:12) {
+  code: 'ERR_DLOPEN_FAILED'
+}
+
+Node.js v22.22.0
+/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:121
+        throw e;
+        ^
+
+Error: The module '/home/jblee/openclaw-lite/node_modules/better-sqlite3/build/Release/better_sqlite3.node'
+was compiled against a different Node.js version using
+NODE_MODULE_VERSION 137. This version of Node.js requires
+NODE_MODULE_VERSION 127. Please try re-compiling or re-installing
+the module (for instance, using `npm rebuild` or `npm install`).
+    at Object..node (node:internal/modules/cjs/loader:1865:18)
+    at Module.load (node:internal/modules/cjs/loader:1441:32)
+    at Function._load (node:internal/modules/cjs/loader:1263:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+    at Module.require (node:internal/modules/cjs/loader:1463:12)
+    at require (node:internal/modules/helpers:147:16)
+    at bindings (/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:112:48)
+    at new Database (/home/jblee/openclaw-lite/node_modules/better-sqlite3/lib/database.js:48:64)
+    at Object.<anonymous> (/home/jblee/openclaw-lite/dist/lib/db.js:61:12) {
+  code: 'ERR_DLOPEN_FAILED'
+}
+
+Node.js v22.22.0
+/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:121
+        throw e;
+        ^
+
+Error: The module '/home/jblee/openclaw-lite/node_modules/better-sqlite3/build/Release/better_sqlite3.node'
+was compiled against a different Node.js version using
+NODE_MODULE_VERSION 137. This version of Node.js requires
+NODE_MODULE_VERSION 127. Please try re-compiling or re-installing
+the module (for instance, using `npm rebuild` or `npm install`).
+    at Object..node (node:internal/modules/cjs/loader:1865:18)
+    at Module.load (node:internal/modules/cjs/loader:1441:32)
+    at Function._load (node:internal/modules/cjs/loader:1263:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+    at Module.require (node:internal/modules/cjs/loader:1463:12)
+    at require (node:internal/modules/helpers:147:16)
+    at bindings (/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:112:48)
+    at new Database (/home/jblee/openclaw-lite/node_modules/better-sqlite3/lib/database.js:48:64)
+    at Object.<anonymous> (/home/jblee/openclaw-lite/dist/lib/db.js:61:12) {
+  code: 'ERR_DLOPEN_FAILED'
+}
+
+Node.js v22.22.0
+/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:121
+        throw e;
+        ^
+
+Error: The module '/home/jblee/openclaw-lite/node_modules/better-sqlite3/build/Release/better_sqlite3.node'
+was compiled against a different Node.js version using
+NODE_MODULE_VERSION 137. This version of Node.js requires
+NODE_MODULE_VERSION 127. Please try re-compiling or re-installing
+the module (for instance, using `npm rebuild` or `npm install`).
+    at Object..node (node:internal/modules/cjs/loader:1865:18)
+    at Module.load (node:internal/modules/cjs/loader:1441:32)
+    at Function._load (node:internal/modules/cjs/loader:1263:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+    at Module.require (node:internal/modules/cjs/loader:1463:12)
+    at require (node:internal/modules/helpers:147:16)
+    at bindings (/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:112:48)
+    at new Database (/home/jblee/openclaw-lite/node_modules/better-sqlite3/lib/database.js:48:64)
+    at Object.<anonymous> (/home/jblee/openclaw-lite/dist/lib/db.js:61:12) {
+  code: 'ERR_DLOPEN_FAILED'
+}
+
+Node.js v22.22.0
+/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:121
+        throw e;
+        ^
+
+Error: The module '/home/jblee/openclaw-lite/node_modules/better-sqlite3/build/Release/better_sqlite3.node'
+was compiled against a different Node.js version using
+NODE_MODULE_VERSION 137. This version of Node.js requires
+NODE_MODULE_VERSION 127. Please try re-compiling or re-installing
+the module (for instance, using `npm rebuild` or `npm install`).
+    at Object..node (node:internal/modules/cjs/loader:1865:18)
+    at Module.load (node:internal/modules/cjs/loader:1441:32)
+    at Function._load (node:internal/modules/cjs/loader:1263:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+    at Module.require (node:internal/modules/cjs/loader:1463:12)
+    at require (node:internal/modules/helpers:147:16)
+    at bindings (/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:112:48)
+    at new Database (/home/jblee/openclaw-lite/node_modules/better-sqlite3/lib/database.js:48:64)
+    at Object.<anonymous> (/home/jblee/openclaw-lite/dist/lib/db.js:61:12) {
+  code: 'ERR_DLOPEN_FAILED'
+}
+
+Node.js v22.22.0
+/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:121
+        throw e;
+        ^
+
+Error: The module '/home/jblee/openclaw-lite/node_modules/better-sqlite3/build/Release/better_sqlite3.node'
+was compiled against a different Node.js version using
+NODE_MODULE_VERSION 137. This version of Node.js requires
+NODE_MODULE_VERSION 127. Please try re-compiling or re-installing
+the module (for instance, using `npm rebuild` or `npm install`).
+    at Object..node (node:internal/modules/cjs/loader:1865:18)
+    at Module.load (node:internal/modules/cjs/loader:1441:32)
+    at Function._load (node:internal/modules/cjs/loader:1263:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+    at Module.require (node:internal/modules/cjs/loader:1463:12)
+    at require (node:internal/modules/helpers:147:16)
+    at bindings (/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:112:48)
+    at new Database (/home/jblee/openclaw-lite/node_modules/better-sqlite3/lib/database.js:48:64)
+    at Object.<anonymous> (/home/jblee/openclaw-lite/dist/lib/db.js:61:12) {
+  code: 'ERR_DLOPEN_FAILED'
+}
+
+Node.js v22.22.0
+/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:121
+        throw e;
+        ^
+
+Error: The module '/home/jblee/openclaw-lite/node_modules/better-sqlite3/build/Release/better_sqlite3.node'
+was compiled against a different Node.js version using
+NODE_MODULE_VERSION 137. This version of Node.js requires
+NODE_MODULE_VERSION 127. Please try re-compiling or re-installing
+the module (for instance, using `npm rebuild` or `npm install`).
+    at Object..node (node:internal/modules/cjs/loader:1865:18)
+    at Module.load (node:internal/modules/cjs/loader:1441:32)
+    at Function._load (node:internal/modules/cjs/loader:1263:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+    at Module.require (node:internal/modules/cjs/loader:1463:12)
+    at require (node:internal/modules/helpers:147:16)
+    at bindings (/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:112:48)
+    at new Database (/home/jblee/openclaw-lite/node_modules/better-sqlite3/lib/database.js:48:64)
+    at Object.<anonymous> (/home/jblee/openclaw-lite/dist/lib/db.js:61:12) {
+  code: 'ERR_DLOPEN_FAILED'
+}
+
+Node.js v22.22.0
+/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:121
+        throw e;
+        ^
+
+Error: The module '/home/jblee/openclaw-lite/node_modules/better-sqlite3/build/Release/better_sqlite3.node'
+was compiled against a different Node.js version using
+NODE_MODULE_VERSION 137. This version of Node.js requires
+NODE_MODULE_VERSION 127. Please try re-compiling or re-installing
+the module (for instance, using `npm rebuild` or `npm install`).
+    at Object..node (node:internal/modules/cjs/loader:1865:18)
+    at Module.load (node:internal/modules/cjs/loader:1441:32)
+    at Function._load (node:internal/modules/cjs/loader:1263:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+    at Module.require (node:internal/modules/cjs/loader:1463:12)
+    at require (node:internal/modules/helpers:147:16)
+    at bindings (/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:112:48)
+    at new Database (/home/jblee/openclaw-lite/node_modules/better-sqlite3/lib/database.js:48:64)
+    at Object.<anonymous> (/home/jblee/openclaw-lite/dist/lib/db.js:61:12) {
+  code: 'ERR_DLOPEN_FAILED'
+}
+
+Node.js v22.22.0
+/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:121
+        throw e;
+        ^
+
+Error: The module '/home/jblee/openclaw-lite/node_modules/better-sqlite3/build/Release/better_sqlite3.node'
+was compiled against a different Node.js version using
+NODE_MODULE_VERSION 137. This version of Node.js requires
+NODE_MODULE_VERSION 127. Please try re-compiling or re-installing
+the module (for instance, using `npm rebuild` or `npm install`).
+    at Object..node (node:internal/modules/cjs/loader:1865:18)
+    at Module.load (node:internal/modules/cjs/loader:1441:32)
+    at Function._load (node:internal/modules/cjs/loader:1263:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+    at Module.require (node:internal/modules/cjs/loader:1463:12)
+    at require (node:internal/modules/helpers:147:16)
+    at bindings (/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:112:48)
+    at new Database (/home/jblee/openclaw-lite/node_modules/better-sqlite3/lib/database.js:48:64)
+    at Object.<anonymous> (/home/jblee/openclaw-lite/dist/lib/db.js:61:12) {
+  code: 'ERR_DLOPEN_FAILED'
+}
+
+Node.js v22.22.0
+/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:121
+        throw e;
+        ^
+
+Error: The module '/home/jblee/openclaw-lite/node_modules/better-sqlite3/build/Release/better_sqlite3.node'
+was compiled against a different Node.js version using
+NODE_MODULE_VERSION 137. This version of Node.js requires
+NODE_MODULE_VERSION 127. Please try re-compiling or re-installing
+the module (for instance, using `npm rebuild` or `npm install`).
+    at Object..node (node:internal/modules/cjs/loader:1865:18)
+    at Module.load (node:internal/modules/cjs/loader:1441:32)
+    at Function._load (node:internal/modules/cjs/loader:1263:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+    at Module.require (node:internal/modules/cjs/loader:1463:12)
+    at require (node:internal/modules/helpers:147:16)
+    at bindings (/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:112:48)
+    at new Database (/home/jblee/openclaw-lite/node_modules/better-sqlite3/lib/database.js:48:64)
+    at Object.<anonymous> (/home/jblee/openclaw-lite/dist/lib/db.js:61:12) {
+  code: 'ERR_DLOPEN_FAILED'
+}
+
+Node.js v22.22.0
+/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:121
+        throw e;
+        ^
+
+Error: The module '/home/jblee/openclaw-lite/node_modules/better-sqlite3/build/Release/better_sqlite3.node'
+was compiled against a different Node.js version using
+NODE_MODULE_VERSION 137. This version of Node.js requires
+NODE_MODULE_VERSION 127. Please try re-compiling or re-installing
+the module (for instance, using `npm rebuild` or `npm install`).
+    at Object..node (node:internal/modules/cjs/loader:1865:18)
+    at Module.load (node:internal/modules/cjs/loader:1441:32)
+    at Function._load (node:internal/modules/cjs/loader:1263:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+    at Module.require (node:internal/modules/cjs/loader:1463:12)
+    at require (node:internal/modules/helpers:147:16)
+    at bindings (/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:112:48)
+    at new Database (/home/jblee/openclaw-lite/node_modules/better-sqlite3/lib/database.js:48:64)
+    at Object.<anonymous> (/home/jblee/openclaw-lite/dist/lib/db.js:61:12) {
+  code: 'ERR_DLOPEN_FAILED'
+}
+
+Node.js v22.22.0
+/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:121
+        throw e;
+        ^
+
+Error: The module '/home/jblee/openclaw-lite/node_modules/better-sqlite3/build/Release/better_sqlite3.node'
+was compiled against a different Node.js version using
+NODE_MODULE_VERSION 137. This version of Node.js requires
+NODE_MODULE_VERSION 127. Please try re-compiling or re-installing
+the module (for instance, using `npm rebuild` or `npm install`).
+    at Object..node (node:internal/modules/cjs/loader:1865:18)
+    at Module.load (node:internal/modules/cjs/loader:1441:32)
+    at Function._load (node:internal/modules/cjs/loader:1263:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+    at Module.require (node:internal/modules/cjs/loader:1463:12)
+    at require (node:internal/modules/helpers:147:16)
+    at bindings (/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:112:48)
+    at new Database (/home/jblee/openclaw-lite/node_modules/better-sqlite3/lib/database.js:48:64)
+    at Object.<anonymous> (/home/jblee/openclaw-lite/dist/lib/db.js:61:12) {
+  code: 'ERR_DLOPEN_FAILED'
+}
+
+Node.js v22.22.0
+/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:121
+        throw e;
+        ^
+
+Error: The module '/home/jblee/openclaw-lite/node_modules/better-sqlite3/build/Release/better_sqlite3.node'
+was compiled against a different Node.js version using
+NODE_MODULE_VERSION 137. This version of Node.js requires
+NODE_MODULE_VERSION 127. Please try re-compiling or re-installing
+the module (for instance, using `npm rebuild` or `npm install`).
+    at Object..node (node:internal/modules/cjs/loader:1865:18)
+    at Module.load (node:internal/modules/cjs/loader:1441:32)
+    at Function._load (node:internal/modules/cjs/loader:1263:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+    at Module.require (node:internal/modules/cjs/loader:1463:12)
+    at require (node:internal/modules/helpers:147:16)
+    at bindings (/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:112:48)
+    at new Database (/home/jblee/openclaw-lite/node_modules/better-sqlite3/lib/database.js:48:64)
+    at Object.<anonymous> (/home/jblee/openclaw-lite/dist/lib/db.js:61:12) {
+  code: 'ERR_DLOPEN_FAILED'
+}
+
+Node.js v22.22.0
+/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:121
+        throw e;
+        ^
+
+Error: The module '/home/jblee/openclaw-lite/node_modules/better-sqlite3/build/Release/better_sqlite3.node'
+was compiled against a different Node.js version using
+NODE_MODULE_VERSION 137. This version of Node.js requires
+NODE_MODULE_VERSION 127. Please try re-compiling or re-installing
+the module (for instance, using `npm rebuild` or `npm install`).
+    at Object..node (node:internal/modules/cjs/loader:1865:18)
+    at Module.load (node:internal/modules/cjs/loader:1441:32)
+    at Function._load (node:internal/modules/cjs/loader:1263:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+    at Module.require (node:internal/modules/cjs/loader:1463:12)
+    at require (node:internal/modules/helpers:147:16)
+    at bindings (/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:112:48)
+    at new Database (/home/jblee/openclaw-lite/node_modules/better-sqlite3/lib/database.js:48:64)
+    at Object.<anonymous> (/home/jblee/openclaw-lite/dist/lib/db.js:61:12) {
+  code: 'ERR_DLOPEN_FAILED'
+}
+
+Node.js v22.22.0
+/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:121
+        throw e;
+        ^
+
+Error: The module '/home/jblee/openclaw-lite/node_modules/better-sqlite3/build/Release/better_sqlite3.node'
+was compiled against a different Node.js version using
+NODE_MODULE_VERSION 137. This version of Node.js requires
+NODE_MODULE_VERSION 127. Please try re-compiling or re-installing
+the module (for instance, using `npm rebuild` or `npm install`).
+    at Object..node (node:internal/modules/cjs/loader:1865:18)
+    at Module.load (node:internal/modules/cjs/loader:1441:32)
+    at Function._load (node:internal/modules/cjs/loader:1263:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+    at Module.require (node:internal/modules/cjs/loader:1463:12)
+    at require (node:internal/modules/helpers:147:16)
+    at bindings (/home/jblee/openclaw-lite/node_modules/bindings/bindings.js:112:48)
+    at new Database (/home/jblee/openclaw-lite/node_modules/better-sqlite3/lib/database.js:48:64)
+    at Object.<anonymous> (/home/jblee/openclaw-lite/dist/lib/db.js:61:12) {
+  code: 'ERR_DLOPEN_FAILED'
+}
+
+Node.js v22.22.0

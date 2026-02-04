@@ -13,6 +13,7 @@ import {
 } from "./lib/db";
 import { UtilityTools } from "./tools/utility";
 import { VectorDB } from "./lib/vectordb";
+import { GraphDB } from "./lib/graphdb";
 import { logChat, logError } from "./lib/logger";
 
 dotenv.config({ path: path.resolve(__dirname, "../.env") });
@@ -193,6 +194,87 @@ bot.command("indexstats", async (ctx) => {
       `마지막 인덱싱: ${stats.lastIndexed || "없음"}`,
       { parse_mode: "HTML" }
     );
+  } catch (err: any) {
+    ctx.reply(`Error: ${err.message}`);
+  }
+});
+
+// GraphRAG commands
+bot.command("buildgraph", async (ctx) => {
+  const neo4jUri = process.env.NEO4J_URI;
+  const neo4jUser = process.env.NEO4J_USER;
+  const neo4jPassword = process.env.NEO4J_PASSWORD;
+
+  if (!neo4jUri || !neo4jUser || !neo4jPassword) {
+    return ctx.reply(
+      "❌ Neo4j 설정 필요\n\n" +
+      ".env에 추가:\n" +
+      "<code>NEO4J_URI=neo4j+s://xxx.databases.neo4j.io\n" +
+      "NEO4J_USER=neo4j\n" +
+      "NEO4J_PASSWORD=your_password</code>",
+      { parse_mode: "HTML" }
+    );
+  }
+
+  const statusMsg = await ctx.reply("🔄 그래프 빌드 시작...");
+  const graphDB = new GraphDB(process.env.VAULT_PATH!);
+
+  try {
+    const connected = await graphDB.init(neo4jUri, neo4jUser, neo4jPassword);
+    if (!connected) {
+      return ctx.api.editMessageText(ctx.chat.id, statusMsg.message_id, "❌ Neo4j 연결 실패");
+    }
+
+    await ctx.api.editMessageText(ctx.chat.id, statusMsg.message_id, "⚙️ 옵시디언 링크 분석 중...");
+
+    const { nodes, relationships } = await graphDB.buildGraph((current, total, file) => {
+      if (current % 100 === 0 || current === total) {
+        ctx.api.editMessageText(
+          ctx.chat.id,
+          statusMsg.message_id,
+          `⚙️ 그래프 빌드 중... ${current}/${total}`
+        ).catch(() => {});
+      }
+    });
+
+    await ctx.api.editMessageText(
+      ctx.chat.id,
+      statusMsg.message_id,
+      `✅ 그래프 빌드 완료!\n\n` +
+      `📄 문서: ${nodes}개\n` +
+      `🔗 관계: ${relationships}개`
+    );
+
+    await graphDB.close();
+  } catch (err: any) {
+    await ctx.api.editMessageText(ctx.chat.id, statusMsg.message_id, `❌ 에러: ${err.message}`);
+  }
+});
+
+bot.command("graphstats", async (ctx) => {
+  const neo4jUri = process.env.NEO4J_URI;
+  const neo4jUser = process.env.NEO4J_USER;
+  const neo4jPassword = process.env.NEO4J_PASSWORD;
+
+  if (!neo4jUri || !neo4jUser || !neo4jPassword) {
+    return ctx.reply("❌ Neo4j 설정 필요. /buildgraph 참조");
+  }
+
+  const graphDB = new GraphDB(process.env.VAULT_PATH!);
+
+  try {
+    await graphDB.init(neo4jUri, neo4jUser, neo4jPassword);
+    const stats = await graphDB.getStats();
+
+    ctx.reply(
+      `<b>🕸️ Knowledge Graph 현황</b>\n\n` +
+      `📄 문서: ${stats.documents}개\n` +
+      `🔗 링크: ${stats.relationships}개\n` +
+      `🏷️ 태그: ${stats.tags}개`,
+      { parse_mode: "HTML" }
+    );
+
+    await graphDB.close();
   } catch (err: any) {
     ctx.reply(`Error: ${err.message}`);
   }

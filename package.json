@@ -29,6 +29,7 @@
     "glob": "^13.0.1",
     "googleapis": "^171.2.0",
     "grammy": "^1.39.3",
+    "neo4j-driver": "^6.0.1",
     "node-cron": "^4.2.1",
     "pdf-parse": "^2.4.5",
     "vectra": "^0.12.3",
