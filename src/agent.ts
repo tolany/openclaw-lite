@@ -1,29 +1,83 @@
-// OpenClaw Lite - Main Agent (v2.0)
+// OpenClaw Lite - Main Agent (v3.0 - Multi-provider: Claude/Gemini)
 
+import Anthropic from "@anthropic-ai/sdk";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import * as fs from "fs";
 import * as path from "path";
 import { exec } from "child_process";
 import { LibrarianTools, JournalistTools, WebTools, getToolDeclarations } from "./tools";
-import { logTool, logChat, logError } from "./lib/logger";
+import { logTool, logError } from "./lib/logger";
 import { ChatMessage } from "./types";
 
+// Anthropic tool schema
+const CLAUDE_TOOLS: Anthropic.Tool[] = [
+  {
+    name: "read_file",
+    description: "Read file content from vault",
+    input_schema: { type: "object" as const, properties: { filePath: { type: "string" } }, required: ["filePath"] }
+  },
+  {
+    name: "search_files",
+    description: "Find files by pattern (e.g., '**/*keyword*.md')",
+    input_schema: { type: "object" as const, properties: { pattern: { type: "string" } }, required: ["pattern"] }
+  },
+  {
+    name: "search_content",
+    description: "Search inside file contents",
+    input_schema: { type: "object" as const, properties: { query: { type: "string" }, fileType: { type: "string" } }, required: ["query"] }
+  },
+  {
+    name: "journal_memory",
+    description: "Save to daily journal",
+    input_schema: { type: "object" as const, properties: { content: { type: "string" }, category: { type: "string", enum: ["insight", "meeting", "todo", "idea"] } }, required: ["content", "category"] }
+  },
+  {
+    name: "write_file",
+    description: "Write or append to file",
+    input_schema: { type: "object" as const, properties: { filePath: { type: "string" }, content: { type: "string" }, mode: { type: "string", enum: ["overwrite", "append"] } }, required: ["filePath", "content"] }
+  },
+  {
+    name: "web_search",
+    description: "Search web for real-time info",
+    input_schema: { type: "object" as const, properties: { query: { type: "string" }, count: { type: "number" } }, required: ["query"] }
+  },
+  {
+    name: "run_script",
+    description: "Run automation scripts",
+    input_schema: { type: "object" as const, properties: { scriptName: { type: "string" } }, required: ["scriptName"] }
+  }
+];
+
+export type Provider = "claude" | "gemini";
+
 export class OpenClawAgent {
-  private genAI: GoogleGenerativeAI;
+  private provider: Provider;
+  private claudeClient?: Anthropic;
+  private geminiClient?: GoogleGenerativeAI;
   private vaultPath: string;
   private persona: any;
   private projectRoot: string;
-  private tools;
 
-  // Tool instances
   private librarian: LibrarianTools;
   private journalist: JournalistTools;
   private web: WebTools;
 
-  constructor(apiKey: string, vaultPath: string, personaPath: string, braveApiKey?: string) {
-    this.genAI = new GoogleGenerativeAI(apiKey);
+  constructor(
+    provider: Provider,
+    apiKey: string,
+    vaultPath: string,
+    personaPath: string,
+    braveApiKey?: string
+  ) {
+    this.provider = provider;
     this.vaultPath = vaultPath;
     this.projectRoot = path.dirname(personaPath);
+
+    if (provider === "claude") {
+      this.claudeClient = new Anthropic({ apiKey });
+    } else {
+      this.geminiClient = new GoogleGenerativeAI(apiKey);
+    }
 
     try {
       this.persona = JSON.parse(fs.readFileSync(personaPath, "utf-8"));
@@ -31,73 +85,31 @@ export class OpenClawAgent {
       this.persona = { name: "Assistant", role: "Helpful Assistant", instructions: [] };
     }
 
-    this.tools = getToolDeclarations();
     this.librarian = new LibrarianTools(vaultPath);
     this.journalist = new JournalistTools(vaultPath);
     this.web = new WebTools(braveApiKey);
   }
 
-  private async getModel(modelName: string) {
-    return this.genAI.getGenerativeModel({ model: modelName, tools: this.tools });
-  }
-
-  private async handleToolCall(call: any): Promise<any> {
-    const { name, args } = call;
+  private async handleToolCall(name: string, input: any): Promise<string> {
     let result: any;
-
     try {
       switch (name) {
-        // Librarian tools
-        case "read_file":
-          result = this.librarian.readFile(args.filePath);
-          break;
-        case "search_files":
-          result = await this.librarian.searchFiles(args.pattern);
-          break;
-        case "search_content":
-          result = this.librarian.searchContent(args.query, args.fileType);
-          break;
-
-        // Journalist tools
-        case "journal_memory":
-          result = this.journalist.journalMemory(args.content, args.category);
-          break;
-        case "write_file":
-          result = this.journalist.writeFile(args.filePath, args.content, args.mode);
-          break;
-
-        // Web tools
-        case "web_search":
-          result = await this.web.webSearch(args.query, args.count);
-          break;
-
-        // Script runner
+        case "read_file": result = this.librarian.readFile(input.filePath); break;
+        case "search_files": result = await this.librarian.searchFiles(input.pattern); break;
+        case "search_content": result = this.librarian.searchContent(input.query, input.fileType); break;
+        case "journal_memory": result = this.journalist.journalMemory(input.content, input.category); break;
+        case "write_file": result = this.journalist.writeFile(input.filePath, input.content, input.mode); break;
+        case "web_search": result = await this.web.webSearch(input.query, input.count); break;
         case "run_script":
           const allowed = ["run_scraper.sh", "run_tracker.sh"];
-          if (!allowed.includes(args.scriptName)) {
-            result = { error: "Unauthorized script" };
-          } else {
-            exec(`bash ${path.join(this.projectRoot, args.scriptName)} &`);
-            result = { message: "Script started" };
-          }
+          if (!allowed.includes(input.scriptName)) result = { error: "Unauthorized" };
+          else { exec(`bash ${path.join(this.projectRoot, input.scriptName)} &`); result = { message: "Started" }; }
           break;
-
-        default:
-          result = { error: `Unknown tool: ${name}` };
+        default: result = { error: `Unknown: ${name}` };
       }
-    } catch (err: any) {
-      result = { error: err.message };
-      logError(`Tool ${name}`, err);
-    }
-
-    logTool(name, args, result);
-    return result;
-  }
-
-  private calculateCost(promptTokens: number, candidatesTokens: number): string {
-    const inputPrice = (promptTokens / 1000000) * 0.5 * 1400;
-    const outputPrice = (candidatesTokens / 1000000) * 3.0 * 1400;
-    return (inputPrice + outputPrice).toFixed(1);
+    } catch (err: any) { result = { error: err.message }; logError(`Tool ${name}`, err); }
+    logTool(name, input, result);
+    return JSON.stringify(result);
   }
 
   private buildSystemPrompt(bootstrap: string): string {
@@ -108,10 +120,10 @@ ${this.persona.instructions.join("\n")}
 - If you cannot find the answer in context, YOU MUST USE tools first.
 - Use 'search_content' to find text inside files.
 - Use 'search_files' to find files by name pattern.
-- Use 'web_search' for real-time data (stock prices, news, etc.).
+- Use 'web_search' for real-time data.
 - Use 'journal_memory' when user says "기억해", "저장해", "메모해".
 - Do NOT say "I don't know" without using tools.
-- Use HTML tags (<b>, <i>, <code>) for formatting.
+- Use HTML tags (<b>, <i>, <code>) for formatting. Do NOT use markdown headers.
 
 [Context]
 ${bootstrap}`;
@@ -121,78 +133,110 @@ ${bootstrap}`;
     const bootstrap = await this.getBootstrapContext();
     const systemPrompt = this.buildSystemPrompt(bootstrap);
 
-    const geminiHistory = history.map(msg => ({
-      role: msg.role === "assistant" ? "model" : "user",
-      parts: [{ text: msg.content }]
-    }));
-
-    const modelsToTry = ["gemini-2.5-flash-preview-05-20", "gemini-2.0-flash"];
-    let lastError: any = null;
-
-    for (const modelName of modelsToTry) {
-      for (let retry = 0; retry < 2; retry++) {
-        try {
-          const model = await this.getModel(modelName);
-          const chatSession = model.startChat({ history: geminiHistory });
-
-          let result = await chatSession.sendMessage(`${systemPrompt}\n\nUser: ${message}`);
-          let response = await result.response;
-
-          let parts = response.candidates?.[0]?.content?.parts || [];
-          let calls = parts.filter((p: any) => p.functionCall);
-
-          // Tool call loop
-          while (calls.length > 0) {
-            const toolResponses = await Promise.all(
-              calls.map(async (call: any) => {
-                const output = await this.handleToolCall(call.functionCall);
-                return { functionResponse: { name: call.functionCall.name, response: output } };
-              })
-            );
-            result = await chatSession.sendMessage(toolResponses);
-            response = await result.response;
-            parts = response.candidates?.[0]?.content?.parts || [];
-            calls = parts.filter((p: any) => p.functionCall);
-          }
-
-          const usage = response.usageMetadata;
-          const tokens = usage?.totalTokenCount || 0;
-          const cost = usage ? parseFloat(this.calculateCost(usage.promptTokenCount, usage.candidatesTokenCount)) : 0;
-          const stats = usage ? `[T: ${tokens} | ${cost}원]` : "";
-
-          return { text: response.text(), stats, tokens, cost };
-
-        } catch (err: any) {
-          lastError = err;
-          logError(`Model ${modelName}`, err);
-          if (err.message.includes("429") || err.message.includes("404")) break;
-          await new Promise(resolve => setTimeout(resolve, 1000));
-        }
-      }
+    if (this.provider === "claude") {
+      return this.chatClaude(message, history, systemPrompt);
+    } else {
+      return this.chatGemini(message, history, systemPrompt);
     }
-
-    return { text: `All models failed.\nError: ${lastError?.message}`, stats: "", tokens: 0, cost: 0 };
   }
 
-  // Vision: Chat with image
-  async chatWithImage(message: string, imageBuffer: Buffer, mimeType: string): Promise<{ text: string; stats: string }> {
+  private async chatClaude(message: string, history: ChatMessage[], systemPrompt: string) {
+    const messages: Anthropic.MessageParam[] = history.map(msg => ({
+      role: msg.role as "user" | "assistant", content: msg.content
+    }));
+    messages.push({ role: "user", content: message });
+
     try {
-      const model = this.genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-      const bootstrap = await this.getBootstrapContext();
+      let response = await this.claudeClient!.messages.create({
+        model: "claude-sonnet-4-20250514", max_tokens: 4096, system: systemPrompt, tools: CLAUDE_TOOLS, messages
+      });
 
-      const result = await model.generateContent([
-        { text: `${this.buildSystemPrompt(bootstrap)}\n\nUser: ${message}` },
-        { inlineData: { mimeType, data: imageBuffer.toString("base64") } }
-      ]);
+      while (response.stop_reason === "tool_use") {
+        const toolUseBlocks = response.content.filter((b): b is Anthropic.ToolUseBlock => b.type === "tool_use");
+        const toolResults: Anthropic.ToolResultBlockParam[] = await Promise.all(
+          toolUseBlocks.map(async (b) => ({ type: "tool_result" as const, tool_use_id: b.id, content: await this.handleToolCall(b.name, b.input) }))
+        );
+        messages.push({ role: "assistant", content: response.content });
+        messages.push({ role: "user", content: toolResults });
+        response = await this.claudeClient!.messages.create({
+          model: "claude-sonnet-4-20250514", max_tokens: 4096, system: systemPrompt, tools: CLAUDE_TOOLS, messages
+        });
+      }
 
-      const response = await result.response;
-      const usage = response.usageMetadata;
-      const stats = usage ? `[T: ${usage.totalTokenCount} | ${this.calculateCost(usage.promptTokenCount, usage.candidatesTokenCount)}원]` : "";
-
-      return { text: response.text(), stats };
+      const text = response.content.find((b): b is Anthropic.TextBlock => b.type === "text")?.text || "";
+      const tokens = response.usage.input_tokens + response.usage.output_tokens;
+      const cost = parseFloat(((response.usage.input_tokens / 1e6 * 3 + response.usage.output_tokens / 1e6 * 15) * 1400).toFixed(1));
+      return { text, stats: `[Claude|T:${tokens}|${cost}원]`, tokens, cost };
     } catch (err: any) {
-      logError("Vision", err);
-      return { text: `Vision error: ${err.message}`, stats: "" };
+      logError("Claude", err);
+      return { text: `Error: ${err.message}`, stats: "", tokens: 0, cost: 0 };
+    }
+  }
+
+  private async chatGemini(message: string, history: ChatMessage[], systemPrompt: string) {
+    const geminiHistory = history.map(msg => ({ role: msg.role === "assistant" ? "model" : "user", parts: [{ text: msg.content }] }));
+    const tools = getToolDeclarations();
+
+    try {
+      const model = this.geminiClient!.getGenerativeModel({ model: "gemini-3-flash-preview", tools });
+      const chat = model.startChat({ history: geminiHistory });
+      let result = await chat.sendMessage(`${systemPrompt}\n\nUser: ${message}`);
+      let response = await result.response;
+
+      let parts = response.candidates?.[0]?.content?.parts || [];
+      let calls = parts.filter((p: any) => p.functionCall);
+
+      while (calls.length > 0) {
+        const toolResponses = await Promise.all(calls.map(async (c: any) => ({
+          functionResponse: { name: c.functionCall.name, response: JSON.parse(await this.handleToolCall(c.functionCall.name, c.functionCall.args)) }
+        })));
+        result = await chat.sendMessage(toolResponses);
+        response = await result.response;
+        parts = response.candidates?.[0]?.content?.parts || [];
+        calls = parts.filter((p: any) => p.functionCall);
+      }
+
+      const usage = response.usageMetadata;
+      const tokens = usage?.totalTokenCount || 0;
+      const cost = usage ? parseFloat(((usage.promptTokenCount / 1e6 * 0.5 + usage.candidatesTokenCount / 1e6 * 3) * 1400).toFixed(1)) : 0;
+      return { text: response.text(), stats: `[Gemini|T:${tokens}|${cost}원]`, tokens, cost };
+    } catch (err: any) {
+      logError("Gemini", err);
+      return { text: `Error: ${err.message}`, stats: "", tokens: 0, cost: 0 };
+    }
+  }
+
+  async chatWithImage(message: string, imageBuffer: Buffer, mimeType: string): Promise<{ text: string; stats: string }> {
+    const bootstrap = await this.getBootstrapContext();
+    const systemPrompt = this.buildSystemPrompt(bootstrap);
+
+    if (this.provider === "claude") {
+      try {
+        const response = await this.claudeClient!.messages.create({
+          model: "claude-sonnet-4-20250514", max_tokens: 4096, system: systemPrompt,
+          messages: [{ role: "user", content: [
+            { type: "image", source: { type: "base64", media_type: mimeType as any, data: imageBuffer.toString("base64") } },
+            { type: "text", text: message }
+          ]}]
+        });
+        const text = response.content.find((b): b is Anthropic.TextBlock => b.type === "text")?.text || "";
+        const tokens = response.usage.input_tokens + response.usage.output_tokens;
+        const cost = ((response.usage.input_tokens / 1e6 * 3 + response.usage.output_tokens / 1e6 * 15) * 1400).toFixed(1);
+        return { text, stats: `[Claude|T:${tokens}|${cost}원]` };
+      } catch (err: any) { return { text: `Error: ${err.message}`, stats: "" }; }
+    } else {
+      try {
+        const model = this.geminiClient!.getGenerativeModel({ model: "gemini-3-flash-preview" });
+        const result = await model.generateContent([
+          { text: `${systemPrompt}\n\nUser: ${message}` },
+          { inlineData: { mimeType, data: imageBuffer.toString("base64") } }
+        ]);
+        const response = await result.response;
+        const usage = response.usageMetadata;
+        const tokens = usage?.totalTokenCount || 0;
+        const cost = usage ? ((usage.promptTokenCount / 1e6 * 0.5 + usage.candidatesTokenCount / 1e6 * 3) * 1400).toFixed(1) : "0";
+        return { text: response.text(), stats: `[Gemini|T:${tokens}|${cost}원]` };
+      } catch (err: any) { return { text: `Error: ${err.message}`, stats: "" }; }
     }
   }
 
@@ -201,9 +245,7 @@ ${bootstrap}`;
     let context = "";
     for (const file of filesToLoad) {
       const filePath = path.join(this.vaultPath, file);
-      if (fs.existsSync(filePath)) {
-        context += `\n[${file}]\n${fs.readFileSync(filePath, "utf-8")}\n`;
-      }
+      if (fs.existsSync(filePath)) context += `\n[${file}]\n${fs.readFileSync(filePath, "utf-8")}\n`;
     }
     return context;
   }
