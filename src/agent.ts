@@ -379,32 +379,48 @@ ${toolsGuidance || "• 답변 전 관련 정보가 있으면 검색"}
       if (keywords.length > 0) {
         try {
           // Search tracker and portfolio
-          const searchResult = await this.vectorDB.search(keywords.join(" "), 7);
+          const searchResult = await this.vectorDB.search(keywords.join(" "), 10);
           const results = searchResult?.results || [];
+
           if (results.length > 0) {
-            const relevantDocs = results
-              .filter((r: any) => r.score > 0.25)
+            // Prioritize tracker and portfolio files
+            const priorityFiles = ['트래커', 'tracker', '_01_S', '_02_A', '_03_B', '포트폴리오'];
+            const sortedResults = results
+              .filter((r: any) => r.score > 0.2)
+              .sort((a: any, b: any) => {
+                const aPath = a.filePath || '';
+                const bPath = b.filePath || '';
+                const aIsPriority = priorityFiles.some(p => aPath.includes(p));
+                const bIsPriority = priorityFiles.some(p => bPath.includes(p));
+                if (aIsPriority && !bIsPriority) return -1;
+                if (!aIsPriority && bIsPriority) return 1;
+                return (b.score || 0) - (a.score || 0);
+              })
+              .slice(0, 5);
+
+            const relevantDocs = sortedResults
               .map((r: any) => {
                 const title = r.title || r.filePath?.split('/').pop() || 'Unknown';
                 const preview = (r.preview || '').slice(0, 150);
-                return `• ${title}: ${preview}`;
+                const isPriority = priorityFiles.some(p => (r.filePath || '').includes(p));
+                return `${isPriority ? '⭐' : '•'} ${title}: ${preview}`;
               })
               .join("\n");
+
             if (relevantDocs) {
-              contextPrefix = `[🔍 볼트 검색 결과 - 키워드: ${keywords.join(", ")}]
+              contextPrefix = `[🔍 볼트 검색 - 키워드: ${keywords.join(", ")}]
 ${relevantDocs}
 
-⚠️ 위 검색 결과와 사용자의 포트폴리오/트래커/진행 중인 딜과 연결점을 찾아서 응답하세요.
-- 그냥 요약하지 마세요
-- 관련 종목이 있으면 언급하세요
-- 이전에 다룬 내용이면 "어제/아까 정리한 거예요" 라고 하세요
+⚠️ 검색 결과를 참고하여 응답:
+- ⭐ 표시는 트래커/포트폴리오 - 반드시 연결점 찾기
+- 그냥 요약 금지. 포트폴리오와 어떤 관련이 있는지 설명
+- 이전에 다룬 내용이면 "어제/아까 정리한 거" 언급
 
-[사용자 메시지]
+[메시지]
 `;
             }
           }
         } catch (e) {
-          // Ignore search errors, proceed without context
           console.log("[AutoSearch] Error:", e);
         }
       }
@@ -786,7 +802,7 @@ ${relevantDocs}
   async saveToMemory(content: string, category: string = "대화"): Promise<void> {
     const today = new Date().toISOString().slice(0, 10);
     const time = new Date().toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" });
-    const memoryPath = path.join(this.vaultPath, "memory", `${today}.md`);
+    const memoryPath = path.join(this.vaultPath, ".openclaw", "memory", `${today}.md`);
 
     let existing = "";
     if (fs.existsSync(memoryPath)) {

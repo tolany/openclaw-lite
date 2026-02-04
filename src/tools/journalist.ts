@@ -19,7 +19,7 @@ export class JournalistTools {
       const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
       const time = new Date().toTimeString().split(" ")[0].substring(0, 5); // HH:MM
 
-      const memoryDir = path.join(this.vaultPath, "memory");
+      const memoryDir = path.join(this.vaultPath, ".openclaw", "memory");
       if (!fs.existsSync(memoryDir)) {
         fs.mkdirSync(memoryDir, { recursive: true });
       }
