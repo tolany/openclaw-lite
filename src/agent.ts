@@ -608,4 +608,34 @@ ${bootstrap}`;
   invalidateCache() {
     this.contextCache.invalidate();
   }
+
+  async determineRoute(message: string): Promise<Provider> {
+    if (!this.openaiClient) return this.provider;
+
+    try {
+      const response = await this.openaiClient.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [
+          { 
+            role: "system", 
+            content: "Classify the user query into 'simple' or 'complex'.\n" +
+                     "- 'simple': Greetings, weather, time, simple reminders, factual questions, or journaling ('기억해', '저장해').\n" +
+                     "- 'complex': Deep analysis, coding, creative writing, complex reasoning over personal documents, or vague queries requiring multi-step thinking.\n" +
+                     "Respond only with the word 'simple' or 'complex'." 
+          },
+          { role: "user", content: message }
+        ],
+        max_tokens: 10,
+        temperature: 0
+      });
+
+      const decision = response.choices[0].message.content?.toLowerCase().trim();
+      console.log(`[Router] Decision: ${decision} for message: "${message.slice(0, 30)}..."`);
+      
+      return decision === "complex" ? "claude" : "openai";
+    } catch (err) {
+      console.log("[Router] Error, defaulting to current provider:", err);
+      return this.provider;
+    }
+  }
 }
