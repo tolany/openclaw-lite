@@ -126,11 +126,15 @@ bot.on("message:text", async (ctx) => {
 bot.on("message:document", async (ctx) => {
   if (!ctx.message.document.file_name?.toLowerCase().endsWith(".pdf")) return ctx.reply("PDF 파일만 지원합니다.");
   const thinkingMsg = await ctx.reply("🔄 <b>리포트 분석 중...</b>", { parse_mode: "HTML" });
+
+  // Sanitize filename to prevent path traversal
+  const safeFileName = path.basename(ctx.message.document.file_name).replace(/[^a-zA-Z0-9._-]/g, '_');
+  const tempPath = path.join("/tmp", `openclaw_${Date.now()}_${safeFileName}`);
+
   try {
     const file = await ctx.api.getFile(ctx.message.document.file_id);
     const url = `https://api.telegram.org/file/bot${process.env.TELEGRAM_BOT_TOKEN}/${file.file_path}`;
     const buffer = Buffer.from(await (await fetch(url)).arrayBuffer());
-    const tempPath = path.join("/tmp", ctx.message.document.file_name);
     fs.writeFileSync(tempPath, buffer);
 
     const prompt = `[첨부파일: ${ctx.message.document.file_name}]\n투자 아이디어를 추출해줘.`;
@@ -138,6 +142,11 @@ bot.on("message:document", async (ctx) => {
     await ctx.api.editMessageText(ctx.chat.id, thinkingMsg.message_id, `${textToHtml(text)}\n\n<code>${stats}</code>`, { parse_mode: "HTML" });
   } catch (err: any) {
     await ctx.api.editMessageText(ctx.chat.id, thinkingMsg.message_id, `❌ 실패: ${err.message}`);
+  } finally {
+    // Cleanup temp file
+    if (fs.existsSync(tempPath)) {
+      fs.unlinkSync(tempPath);
+    }
   }
 });
 

@@ -17,9 +17,9 @@ pip install -r requirements.txt
 ```env
 TELEGRAM_API_ID=your_api_id
 TELEGRAM_API_HASH=your_api_hash
-TELEGRAM_PHONE=+821012345678
-TARGET_BOT_TOKEN=REDACTED_TOKEN
-TARGET_CHAT_ID=380922285
+TELEGRAM_PHONE=+82101234xxxx
+TARGET_BOT_TOKEN=your_bot_token_from_botfather
+TARGET_CHAT_ID=your_chat_id
 ```
 
 3. 키워드 설정 (config.json)

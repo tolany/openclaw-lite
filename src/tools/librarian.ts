@@ -123,8 +123,16 @@ export class LibrarianTools {
         searchPath = fullPath;
       }
 
-      const typeFilter = fileType ? `--include="*.${fileType}"` : '--include="*.md" --include="*.txt" --include="*.pdf"';
-      const cmd = `grep -rn ${typeFilter} -m 15 "${query}" "${searchPath}" 2>/dev/null | head -15`;
+      // Sanitize query to prevent command injection
+      const sanitizedQuery = query.replace(/[`$\\;"'|&<>(){}[\]!#~*?]/g, '');
+      if (!sanitizedQuery.trim()) {
+        return { error: "Invalid search query" };
+      }
+
+      // Sanitize fileType to allow only alphanumeric extensions
+      const sanitizedType = fileType ? fileType.replace(/[^a-zA-Z0-9]/g, '') : '';
+      const typeFilter = sanitizedType ? `--include="*.${sanitizedType}"` : '--include="*.md" --include="*.txt" --include="*.pdf"';
+      const cmd = `grep -rn ${typeFilter} -m 15 "${sanitizedQuery}" "${searchPath}" 2>/dev/null | head -15`;
 
       const output = execSync(cmd, { encoding: "utf-8", maxBuffer: 1024 * 1024 });
 
