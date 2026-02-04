@@ -176,7 +176,24 @@ bot.on("message:document", async (ctx) => {
 });
 
 function textToHtml(text: string): string {
-  return text.replace(/\*\*(.*?)\*\*/g, "<b>$1</b>").replace(/^\s*[-*]\s+/gm, "• ").replace(/`([^`]+)`/g, "<code>$1</code>");
+  return text
+    // Headers (###, ##, #) -> bold
+    .replace(/^#{1,3}\s+(.+)$/gm, "<b>$1</b>")
+    // Bold (**text** or __text__)
+    .replace(/\*\*(.*?)\*\*/g, "<b>$1</b>")
+    .replace(/__(.*?)__/g, "<b>$1</b>")
+    // Italic (*text* or _text_) - be careful not to match bullet points
+    .replace(/(?<!\*)\*([^*\n]+)\*(?!\*)/g, "<i>$1</i>")
+    // Inline code
+    .replace(/`([^`]+)`/g, "<code>$1</code>")
+    // Bullet points
+    .replace(/^\s*[-*]\s+/gm, "• ")
+    // Numbered lists (keep as is, just clean up)
+    .replace(/^\s*(\d+)\.\s+/gm, "$1. ")
+    // Remove horizontal rules
+    .replace(/^---+$/gm, "")
+    // Clean up multiple newlines
+    .replace(/\n{3,}/g, "\n\n");
 }
 
 // Scheduled Jobs
