@@ -10,6 +10,7 @@ import { logTool, logError } from "./lib/logger";
 import { addReminder } from "./lib/db";
 import { VectorDB } from "./lib/vectordb";
 import { GraphDB } from "./lib/graphdb";
+import { ContextCache, buildClaudeCachedSystem } from "./lib/cache";
 import { ChatMessage } from "./types";
 
 // Retry configuration
@@ -107,6 +108,7 @@ export class OpenClawAgent {
   private utility: UtilityTools;
   private vectorDB: VectorDB;
   private graphDB: GraphDB;
+  private contextCache: ContextCache;
   private userId: number = 0;
 
   constructor(provider: Provider, apiKey: string, vaultPath: string, personaPath: string, braveApiKey?: string, geminiApiKey?: string) {
@@ -138,6 +140,9 @@ export class OpenClawAgent {
 
     // GraphDB for GraphRAG
     this.graphDB = new GraphDB(vaultPath);
+
+    // Context caching for cost reduction
+    this.contextCache = new ContextCache(vaultPath);
 
     // Initialize GraphDB if credentials are available
     const neo4jUri = process.env.NEO4J_URI;
@@ -263,13 +268,14 @@ ${bootstrap}`;
     }));
     messages.push({ role: "user", content: message });
 
-    // For OAuth tokens, system must be array format with Claude Code identity
+    // Always use cached system prompt for cost reduction
+    // cache_control: ephemeral caches for 5 minutes (90% cost reduction on cached tokens)
     const systemParam = isOAuthToken(this.apiKey)
       ? [
           { type: "text" as const, text: "You are Claude Code, Anthropic's official CLI for Claude.", cache_control: { type: "ephemeral" as const } },
           { type: "text" as const, text: systemPrompt, cache_control: { type: "ephemeral" as const } }
         ]
-      : systemPrompt;
+      : buildClaudeCachedSystem(this.persona.instructions.join("\n"), systemPrompt);
 
     try {
       let response = await withRetry(
@@ -387,12 +393,27 @@ ${bootstrap}`;
   }
 
   private async getBootstrapContext(): Promise<string> {
-    const filesToLoad = ["SOUL.md", "USER.md", "MEMORY.md"];
+    // Load minimal context files (keep small for caching efficiency)
+    const filesToLoad = ["SOUL.md", "USER.md"];
     let context = "";
     for (const file of filesToLoad) {
       const filePath = path.join(this.vaultPath, file);
-      if (fs.existsSync(filePath)) context += `\n[${file}]\n${fs.readFileSync(filePath, "utf-8")}\n`;
+      if (fs.existsSync(filePath)) {
+        const content = fs.readFileSync(filePath, "utf-8");
+        // Truncate large files to 500 chars
+        context += `\n[${file}]\n${content.slice(0, 500)}${content.length > 500 ? "..." : ""}\n`;
+      }
     }
+
+    // Add cached graph schema
+    const graphSchema = await this.contextCache.getGraphSchema(this.graphDB);
+    context += `\n${graphSchema}`;
+
     return context;
+  }
+
+  // Invalidate cache (call after /buildgraph)
+  invalidateCache() {
+    this.contextCache.invalidate();
   }
 }

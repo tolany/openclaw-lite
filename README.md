@@ -18,6 +18,9 @@ AI가 혼자 "생각-행동-관찰"을 반복하며 토큰을 낭비하지 않�
 ### 3. 의미로 검색한다 (Semantic Search)
 "돈 많이 번 건" 검색하면 "IRR", "수익률", "exit" 관련 문서를 찾습니다. 키워드가 아닌 **의미로 검색**합니다. (Gemini Embedding 무료)
 
+### 4. 관계로 탐색한다 (GraphRAG)
+Obsidian의 `[[링크]]`와 `#태그`를 Neo4j 그래프로 구축합니다. "A와 B의 연결점"을 찾거나, 문서 간 관계를 탐색할 수 있습니다.
+
 ---
 
 ## 주요 기능
@@ -37,6 +40,8 @@ AI가 혼자 "생각-행동-관찰"을 반복하며 토큰을 낭비하지 않�
 | `set_reminder` | 리마인더 설정 |
 | `list_dir` | 디렉토리 목록 |
 | `copy_to_vault` | 드라이브 → 볼트 복사 |
+| `graph_search` | 문서 + 관계 검색 (GraphRAG) |
+| `find_connection` | 두 주제 간 연결 경로 탐색 |
 
 ### 명령어
 
@@ -51,6 +56,8 @@ AI가 혼자 "생각-행동-관찰"을 반복하며 토큰을 낭비하지 않�
 | `/health` | 시스템 상태 확인 |
 | `/index` | 벡터 인덱스 빌드 (의미 검색용) |
 | `/indexstats` | 인덱스 현황 |
+| `/buildgraph` | Neo4j 그래프 빌드 (관계 검색용) |
+| `/graphstats` | 그래프 현황 (노드/관계 수) |
 
 ### 인라인 쿼리
 `@봇이름 질문` - 다른 채팅에서도 바로 사용 가능
@@ -74,6 +81,7 @@ work:프로젝트/문서.xlsx
 | Bot Framework | grammY |
 | Database | SQLite (better-sqlite3) |
 | Vector DB | Vectra + Gemini Embedding |
+| Graph DB | Neo4j Aura (GraphRAG) |
 | Logging | Winston |
 
 ---
@@ -103,6 +111,11 @@ VAULT_PATH=/path/to/obsidian/vault
 
 # Optional
 BRAVE_API_KEY=your_brave_key  # for web search
+
+# Neo4j (GraphRAG - optional)
+NEO4J_URI=neo4j+s://xxx.databases.neo4j.io
+NEO4J_USER=neo4j
+NEO4J_PASSWORD=your_password
 ```
 
 ### 2. 의존성 설치

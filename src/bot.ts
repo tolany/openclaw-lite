@@ -237,12 +237,16 @@ bot.command("buildgraph", async (ctx) => {
       }
     });
 
+    // Invalidate context cache to use new graph schema
+    agent.invalidateCache();
+
     await ctx.api.editMessageText(
       ctx.chat.id,
       statusMsg.message_id,
       `✅ 그래프 빌드 완료!\n\n` +
       `📄 문서: ${nodes}개\n` +
-      `🔗 관계: ${relationships}개`
+      `🔗 관계: ${relationships}개\n` +
+      `🔄 캐시 갱신됨`
     );
 
     await graphDB.close();
