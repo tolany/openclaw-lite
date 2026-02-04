@@ -1,4 +1,4 @@
-// OpenClaw Lite - Telegram Bot (v4.1 - Streaming & Inline)
+// OpenClaw Lite - Telegram Bot (v4.5 - Streaming UI)
 
 import { Bot, InlineQueryResultBuilder } from "grammy";
 import * as dotenv from "dotenv";
@@ -18,9 +18,12 @@ import { logChat, logError } from "./lib/logger";
 
 dotenv.config({ path: path.resolve(__dirname, "../.env") });
 
-// Provider selection: MODEL_PROVIDER=claude or gemini (default: claude)
+// Provider selection: MODEL_PROVIDER=claude, gemini, or openai (default: claude)
 const provider = (process.env.MODEL_PROVIDER || "claude") as Provider;
-const apiKey = provider === "claude" ? process.env.ANTHROPIC_API_KEY! : process.env.GOOGLE_API_KEY!;
+let apiKey = "";
+if (provider === "claude") apiKey = process.env.ANTHROPIC_API_KEY!;
+else if (provider === "openai") apiKey = process.env.OPENAI_API_KEY!;
+else apiKey = process.env.GOOGLE_API_KEY!;
 
 const bot = new Bot(process.env.TELEGRAM_BOT_TOKEN!);
 const agent = new OpenClawAgent(
@@ -42,7 +45,7 @@ bot.use(async (ctx, next) => {
 });
 
 // Commands
-bot.command("start", (ctx) => ctx.reply(`OpenClaw Lite v4.1 [${agent.getProvider()}]\n\n인라인 모드: @봇이름 질문\nProvider 전환: /provider`));
+bot.command("start", (ctx) => ctx.reply(`OpenClaw Lite v4.5 [${agent.getProvider()}]\n\n인라인 모드: @봇이름 질문\nProvider 전환: /provider`));
 
 bot.command("clear", async (ctx) => {
   clearHistory(ctx.from!.id);
@@ -66,17 +69,18 @@ bot.command("provider", async (ctx) => {
     return ctx.reply(
       `<b>🤖 현재 Provider</b>: ${current}\n\n` +
       `<b>전환 명령어</b>\n` +
-      `<code>/provider gemini</code> - Gemini로 전환 (저렴)\n` +
-      `<code>/provider claude</code> - Claude로 전환 (고품질)`,
+      `<code>/provider gemini</code> - Gemini (초저렴)\n` +
+      `<code>/provider openai</code> - OpenAI (가성비/안정)\n` +
+      `<code>/provider claude</code> - Claude (고품질/고비용)`,
       { parse_mode: "HTML" }
     );
   }
 
-  if (args !== "claude" && args !== "gemini") {
-    return ctx.reply("❌ 유효한 provider: claude 또는 gemini");
+  if (args !== "claude" && args !== "gemini" && args !== "openai") {
+    return ctx.reply("❌ 유효한 provider: claude, gemini, openai");
   }
 
-  const result = agent.switchProvider(args as "claude" | "gemini");
+  const result = agent.switchProvider(args as Provider);
   if (result.success) {
     ctx.reply(`✅ ${result.message}\n\n현재 Provider: <b>${agent.getProvider()}</b>`, { parse_mode: "HTML" });
   } else {
@@ -347,9 +351,27 @@ bot.on("message:text", async (ctx) => {
       "⚙️ 처리 중..."
     );
 
-    // Add topic context if exists
+    // Streaming state
+    let lastUpdate = Date.now();
+    const updateInterval = 800; // 800ms throttling to avoid Telegram rate limits
+
     const contextPrefix = topic ? `[현재 토픽: ${topic}]\n` : "";
-    const { text, stats, tokens, cost } = await agent.chat(contextPrefix + userMessage, history);
+    const { text, stats, tokens, cost } = await agent.chat(
+      contextPrefix + userMessage, 
+      history,
+      async (chunk) => {
+        const now = Date.now();
+        if (now - lastUpdate > updateInterval) {
+          lastUpdate = now;
+          await ctx.api.editMessageText(
+            ctx.chat.id,
+            thinkingMsg.message_id,
+            `${toHtml(chunk)}\n\n⏳ <i>작성 중...</i>`,
+            { parse_mode: "HTML" }
+          ).catch(() => {});
+        }
+      }
+    );
 
     saveConversation(userId, "user", userMessage);
     saveConversation(userId, "assistant", text, tokens, cost);
@@ -372,7 +394,10 @@ bot.on("message:text", async (ctx) => {
         thinkingMsg.message_id,
         finalText,
         { parse_mode: "HTML" }
-      );
+      ).catch(() => {
+        // Fallback if edit fails (e.g. content identical)
+        ctx.reply(finalText, { parse_mode: "HTML" });
+      });
     }
   } catch (err: any) {
     logError("TextHandler", err);
@@ -510,4 +535,4 @@ cron.schedule("* * * * *", async () => {
 });
 
 bot.start();
-console.log(`OpenClaw Lite v4.1 started [${provider}] - Streaming & Inline enabled`);
+console.log(`OpenClaw Lite v4.5 started [${provider}] - Streaming & Inline enabled`);

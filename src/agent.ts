@@ -1,7 +1,8 @@
-// OpenClaw Lite - Main Agent (v4.1 - Streaming & Retry)
+// OpenClaw Lite - Main Agent (v4.5 - Streaming Support)
 
 import Anthropic from "@anthropic-ai/sdk";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import OpenAI from "openai";
 import * as fs from "fs";
 import * as path from "path";
 import { exec } from "child_process";
@@ -32,7 +33,7 @@ async function withRetry<T>(
       return await fn();
     } catch (err: any) {
       lastError = err;
-      const isRetryable = err.status === 429 || err.status === 500 || err.status === 503 || err.message?.includes("overloaded");
+      const isRetryable = err.status === 429 || err.status === 500 || err.status === 503 || err.message?.includes("overloaded") || err.message?.includes("rate limit");
 
       if (!isRetryable || attempt === MAX_RETRIES - 1) {
         throw err;
@@ -66,7 +67,17 @@ const CLAUDE_TOOLS: Anthropic.Tool[] = [
   { name: "find_connection", description: "Find path/connection between two topics or documents", input_schema: { type: "object" as const, properties: { from: { type: "string" }, to: { type: "string" } }, required: ["from", "to"] } }
 ];
 
-export type Provider = "claude" | "gemini";
+// OpenAI tool schema (matches CLAUDE_TOOLS but format differs)
+const OPENAI_TOOLS: OpenAI.Chat.ChatCompletionTool[] = CLAUDE_TOOLS.map(t => ({
+  type: "function",
+  function: {
+    name: t.name,
+    description: t.description,
+    parameters: t.input_schema
+  }
+}));
+
+export type Provider = "claude" | "gemini" | "openai";
 
 // Check if token is OAuth token (Claude Max subscription)
 function isOAuthToken(apiKey: string): boolean {
@@ -97,9 +108,11 @@ export class OpenClawAgent {
   private provider: Provider;
   private claudeClient?: Anthropic;
   private geminiClient?: GoogleGenerativeAI;
+  private openaiClient?: OpenAI;
   private apiKey: string;
   private claudeApiKey: string;
   private geminiApiKey: string;
+  private openaiApiKey: string;
   private vaultPath: string;
   private persona: any;
   private projectRoot: string;
@@ -119,17 +132,15 @@ export class OpenClawAgent {
     this.vaultPath = vaultPath;
     this.projectRoot = path.dirname(personaPath);
 
-    // Store both API keys for runtime switching
+    // Store API keys for runtime switching
     this.claudeApiKey = process.env.ANTHROPIC_API_KEY || "";
     this.geminiApiKey = geminiApiKey || process.env.GOOGLE_API_KEY || "";
+    this.openaiApiKey = process.env.OPENAI_API_KEY || "";
 
-    // Initialize both clients if keys available
-    if (this.claudeApiKey) {
-      this.claudeClient = createAnthropicClient(this.claudeApiKey);
-    }
-    if (this.geminiApiKey) {
-      this.geminiClient = new GoogleGenerativeAI(this.geminiApiKey);
-    }
+    // Initialize clients if keys available
+    if (this.claudeApiKey) this.claudeClient = createAnthropicClient(this.claudeApiKey);
+    if (this.geminiApiKey) this.geminiClient = new GoogleGenerativeAI(this.geminiApiKey);
+    if (this.openaiApiKey) this.openaiClient = new OpenAI({ apiKey: this.openaiApiKey });
 
     try {
       this.persona = JSON.parse(fs.readFileSync(personaPath, "utf-8"));
@@ -183,28 +194,24 @@ export class OpenClawAgent {
     }
 
     if (newProvider === "claude") {
-      if (!this.claudeApiKey) {
-        return { success: false, message: "Claude API 키가 설정되지 않음 (ANTHROPIC_API_KEY)" };
-      }
-      if (!this.claudeClient) {
-        this.claudeClient = createAnthropicClient(this.claudeApiKey);
-      }
+      if (!this.claudeApiKey) return { success: false, message: "Claude API 키가 설정되지 않음" };
+      if (!this.claudeClient) this.claudeClient = createAnthropicClient(this.claudeApiKey);
       this.provider = "claude";
       this.apiKey = this.claudeApiKey;
-      console.log("[Agent] Switched to Claude");
-      return { success: true, message: "Claude로 전환됨 ✓" };
-    } else {
-      if (!this.geminiApiKey) {
-        return { success: false, message: "Gemini API 키가 설정되지 않음 (GOOGLE_API_KEY)" };
-      }
-      if (!this.geminiClient) {
-        this.geminiClient = new GoogleGenerativeAI(this.geminiApiKey);
-      }
+    } else if (newProvider === "gemini") {
+      if (!this.geminiApiKey) return { success: false, message: "Gemini API 키가 설정되지 않음" };
+      if (!this.geminiClient) this.geminiClient = new GoogleGenerativeAI(this.geminiApiKey);
       this.provider = "gemini";
       this.apiKey = this.geminiApiKey;
-      console.log("[Agent] Switched to Gemini");
-      return { success: true, message: "Gemini로 전환됨 ✓" };
+    } else if (newProvider === "openai") {
+      if (!this.openaiApiKey) return { success: false, message: "OpenAI API 키가 설정되지 않음" };
+      if (!this.openaiClient) this.openaiClient = new OpenAI({ apiKey: this.openaiApiKey });
+      this.provider = "openai";
+      this.apiKey = this.openaiApiKey;
     }
+
+    console.log(`[Agent] Switched to ${this.provider}`);
+    return { success: true, message: `${this.provider}로 전환됨 ✓` };
   }
 
   private parseRelativeTime(timeStr: string): Date {
@@ -295,25 +302,115 @@ ${this.persona.instructions.join("\n")}
 ${bootstrap}`;
   }
 
-  async chat(message: string, history: ChatMessage[] = []): Promise<{ text: string; stats: string; tokens: number; cost: number }> {
+  async chat(message: string, history: ChatMessage[] = [], onChunk?: (text: string) => void): Promise<{ text: string; stats: string; tokens: number; cost: number }> {
     const bootstrap = await this.getBootstrapContext();
     const systemPrompt = this.buildSystemPrompt(bootstrap);
 
     if (this.provider === "claude") {
-      return this.chatClaude(message, history, systemPrompt);
+      return this.chatClaude(message, history, systemPrompt, onChunk);
+    } else if (this.provider === "openai") {
+      return this.chatOpenAI(message, history, systemPrompt, onChunk);
     } else {
-      return this.chatGemini(message, history, systemPrompt);
+      return this.chatGemini(message, history, systemPrompt, onChunk);
     }
   }
 
-  private async chatClaude(message: string, history: ChatMessage[], systemPrompt: string) {
+  private async chatOpenAI(message: string, history: ChatMessage[], systemPrompt: string, onChunk?: (text: string) => void) {
+    const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [
+      { role: "system", content: systemPrompt },
+      ...history.map(msg => ({
+        role: msg.role as "user" | "assistant",
+        content: msg.content
+      })),
+      { role: "user", content: message }
+    ];
+
+    try {
+      let response = await withRetry(
+        () => this.openaiClient!.chat.completions.create({
+          model: "gpt-4o-mini",
+          messages,
+          tools: OPENAI_TOOLS,
+          tool_choice: "auto",
+          stream: true
+        }),
+        "OpenAI API"
+      );
+
+      let fullText = "";
+      let toolCalls: any[] = [];
+
+      for await (const chunk of response) {
+        const delta = chunk.choices[0]?.delta;
+        if (delta?.content) {
+          fullText += delta.content;
+          if (onChunk) onChunk(fullText);
+        }
+        if (delta?.tool_calls) {
+          for (const tc of delta.tool_calls) {
+            if (!toolCalls[tc.index]) toolCalls[tc.index] = { id: tc.id, function: { name: "", arguments: "" } };
+            if (tc.id) toolCalls[tc.index].id = tc.id;
+            if (tc.function?.name) toolCalls[tc.index].function.name += tc.function.name;
+            if (tc.function?.arguments) toolCalls[tc.index].function.arguments += tc.function.arguments;
+          }
+        }
+      }
+
+      if (toolCalls.length > 0) {
+        const assistantMessage: OpenAI.Chat.ChatCompletionAssistantMessageParam = {
+          role: "assistant",
+          tool_calls: toolCalls.map(tc => ({
+            id: tc.id,
+            type: "function",
+            function: tc.function
+          })) as any
+        };
+        messages.push(assistantMessage);
+
+        for (const tc of toolCalls) {
+          const result = await this.handleToolCall(tc.function.name, JSON.parse(tc.function.arguments));
+          messages.push({
+            role: "tool",
+            tool_call_id: tc.id,
+            content: result
+          });
+        }
+
+        const secondResponse = await withRetry(
+          () => this.openaiClient!.chat.completions.create({
+            model: "gpt-4o-mini",
+            messages,
+            stream: true
+          }),
+          "OpenAI API (tool)"
+        );
+
+        fullText = "";
+        for await (const chunk of secondResponse) {
+          const content = chunk.choices[0]?.delta?.content;
+          if (content) {
+            fullText += content;
+            if (onChunk) onChunk(fullText);
+          }
+        }
+      }
+
+      const tokens = Math.ceil((systemPrompt.length + message.length + fullText.length) / 3);
+      const cost = parseFloat(((tokens / 1e6 * 0.15 + (fullText.length/3) / 1e6 * 0.6) * 1400).toFixed(1));
+      
+      return { text: fullText, stats: `[OpenAI|T:${tokens}|${cost}원]`, tokens, cost };
+    } catch (err: any) {
+      logError("OpenAI", err);
+      return { text: `Error: ${err.message}`, stats: "", tokens: 0, cost: 0 };
+    }
+  }
+
+  private async chatClaude(message: string, history: ChatMessage[], systemPrompt: string, onChunk?: (text: string) => void) {
     const messages: Anthropic.MessageParam[] = history.map(msg => ({
       role: msg.role as "user" | "assistant", content: msg.content
     }));
     messages.push({ role: "user", content: message });
 
-    // Always use cached system prompt for cost reduction
-    // cache_control: ephemeral caches for 5 minutes (90% cost reduction on cached tokens)
     const systemParam = isOAuthToken(this.apiKey)
       ? [
           { type: "text" as const, text: "You are Claude Code, Anthropic's official CLI for Claude.", cache_control: { type: "ephemeral" as const } },
@@ -322,47 +419,70 @@ ${bootstrap}`;
       : buildClaudeCachedSystem(this.persona.instructions.join("\n"), systemPrompt);
 
     try {
-      let response = await withRetry(
+      let fullText = "";
+      let currentToolUse: any = null;
+
+      const stream = await withRetry(
         () => this.claudeClient!.messages.create({
           model: "claude-sonnet-4-20250514",
           max_tokens: 4096,
           system: systemParam,
           tools: CLAUDE_TOOLS,
-          messages
+          messages,
+          stream: true
         }),
         "Claude API"
       );
 
-      while (response.stop_reason === "tool_use") {
-        const toolUseBlocks = response.content.filter((b): b is Anthropic.ToolUseBlock => b.type === "tool_use");
-        const toolResults: Anthropic.ToolResultBlockParam[] = await Promise.all(
-          toolUseBlocks.map(async (b) => ({ type: "tool_result" as const, tool_use_id: b.id, content: await this.handleToolCall(b.name, b.input) }))
-        );
-        messages.push({ role: "assistant", content: response.content });
-        messages.push({ role: "user", content: toolResults });
-        response = await withRetry(
+      for await (const event of stream) {
+        if (event.type === "content_block_delta" && event.delta.type === "text_delta") {
+          fullText += event.delta.text;
+          if (onChunk) onChunk(fullText);
+        } else if (event.type === "content_block_start" && event.content_block.type === "tool_use") {
+          currentToolUse = event.content_block;
+          currentToolUse.input = "";
+        } else if (event.type === "content_block_delta" && event.delta.type === "input_json_delta") {
+          currentToolUse.input += event.delta.partial_json;
+        }
+      }
+
+      if (currentToolUse) {
+        const input = JSON.parse(currentToolUse.input);
+        const result = await this.handleToolCall(currentToolUse.name, input);
+        
+        messages.push({ role: "assistant", content: [{ type: "tool_use", id: currentToolUse.id, name: currentToolUse.name, input }] });
+        messages.push({ role: "user", content: [{ type: "tool_result", tool_use_id: currentToolUse.id, content: result }] });
+
+        const secondStream = await withRetry(
           () => this.claudeClient!.messages.create({
             model: "claude-sonnet-4-20250514",
             max_tokens: 4096,
             system: systemParam,
-            tools: CLAUDE_TOOLS,
-            messages
+            messages,
+            stream: true
           }),
           "Claude API (tool)"
         );
+
+        fullText = "";
+        for await (const event of secondStream) {
+          if (event.type === "content_block_delta" && event.delta.type === "text_delta") {
+            fullText += event.delta.text;
+            if (onChunk) onChunk(fullText);
+          }
+        }
       }
 
-      const text = response.content.find((b): b is Anthropic.TextBlock => b.type === "text")?.text || "";
-      const tokens = response.usage.input_tokens + response.usage.output_tokens;
-      const cost = parseFloat(((response.usage.input_tokens / 1e6 * 3 + response.usage.output_tokens / 1e6 * 15) * 1400).toFixed(1));
-      return { text, stats: `[Claude|T:${tokens}|${cost}원]`, tokens, cost };
+      const tokens = Math.ceil((systemPrompt.length + message.length + fullText.length) / 3);
+      const cost = parseFloat(((tokens / 1e6 * 3 + (fullText.length/3) / 1e6 * 15) * 1400).toFixed(1));
+      return { text: fullText, stats: `[Claude|T:${tokens}|${cost}원]`, tokens, cost };
     } catch (err: any) {
       logError("Claude", err);
       return { text: `Error: ${err.message}`, stats: "", tokens: 0, cost: 0 };
     }
   }
 
-  private async chatGemini(message: string, history: ChatMessage[], systemPrompt: string) {
+  private async chatGemini(message: string, history: ChatMessage[], systemPrompt: string, onChunk?: (text: string) => void) {
     const geminiHistory = history.map(msg => ({ role: msg.role === "assistant" ? "model" : "user", parts: [{ text: msg.content }] }));
     const tools = getToolDeclarations();
 
@@ -371,11 +491,18 @@ ${bootstrap}`;
       const chat = model.startChat({ history: geminiHistory });
 
       let result = await withRetry(
-        () => chat.sendMessage(`${systemPrompt}\n\nUser: ${message}`),
+        () => chat.sendMessageStream(`${systemPrompt}\n\nUser: ${message}`),
         "Gemini API"
       );
-      let response = await result.response;
 
+      let fullText = "";
+      for await (const chunk of result.stream) {
+        const chunkText = chunk.text();
+        fullText += chunkText;
+        if (onChunk) onChunk(fullText);
+      }
+
+      const response = await result.response;
       let parts = response.candidates?.[0]?.content?.parts || [];
       let calls = parts.filter((p: any) => p.functionCall);
 
@@ -383,19 +510,28 @@ ${bootstrap}`;
         const toolResponses = await Promise.all(calls.map(async (c: any) => ({
           functionResponse: { name: c.functionCall.name, response: JSON.parse(await this.handleToolCall(c.functionCall.name, c.functionCall.args)) }
         })));
+        
         result = await withRetry(
-          () => chat.sendMessage(toolResponses),
+          () => chat.sendMessageStream(toolResponses),
           "Gemini API (tool)"
         );
-        response = await result.response;
-        parts = response.candidates?.[0]?.content?.parts || [];
+
+        fullText = "";
+        for await (const chunk of result.stream) {
+          const chunkText = chunk.text();
+          fullText += chunkText;
+          if (onChunk) onChunk(fullText);
+        }
+
+        const nextResponse = await result.response;
+        parts = nextResponse.candidates?.[0]?.content?.parts || [];
         calls = parts.filter((p: any) => p.functionCall);
       }
 
-      const usage = response.usageMetadata;
+      const usage = (await result.response).usageMetadata;
       const tokens = usage?.totalTokenCount || 0;
       const cost = usage ? parseFloat(((usage.promptTokenCount / 1e6 * 0.5 + usage.candidatesTokenCount / 1e6 * 3) * 1400).toFixed(1)) : 0;
-      return { text: response.text(), stats: `[Gemini|T:${tokens}|${cost}원]`, tokens, cost };
+      return { text: fullText, stats: `[Gemini|T:${tokens}|${cost}원]`, tokens, cost };
     } catch (err: any) {
       logError("Gemini", err);
       return { text: `Error: ${err.message}`, stats: "", tokens: 0, cost: 0 };
@@ -420,6 +556,24 @@ ${bootstrap}`;
         const cost = ((response.usage.input_tokens / 1e6 * 3 + response.usage.output_tokens / 1e6 * 15) * 1400).toFixed(1);
         return { text, stats: `[Claude|T:${tokens}|${cost}원]` };
       } catch (err: any) { return { text: `Error: ${err.message}`, stats: "" }; }
+    } else if (this.provider === "openai") {
+      try {
+        const response = await this.openaiClient!.chat.completions.create({
+          model: "gpt-4o-mini",
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: [
+              { type: "text", text: message },
+              { type: "image_url", image_url: { url: `data:${mimeType};base64,${imageBuffer.toString("base64")}` } }
+            ]}
+          ]
+        });
+        const text = response.choices[0].message.content || "";
+        const usage = response.usage!;
+        const tokens = usage.total_tokens;
+        const cost = ((usage.prompt_tokens / 1e6 * 0.15 + usage.completion_tokens / 1e6 * 0.6) * 1400).toFixed(1);
+        return { text, stats: `[OpenAI|T:${tokens}|${cost}원]` };
+      } catch (err: any) { return { text: `Error: ${err.message}`, stats: "" }; }
     } else {
       try {
         const model = this.geminiClient!.getGenerativeModel({ model: "gemini-3-flash-preview" });
@@ -437,26 +591,20 @@ ${bootstrap}`;
   }
 
   private async getBootstrapContext(): Promise<string> {
-    // Load minimal context files (keep small for caching efficiency)
     const filesToLoad = ["SOUL.md", "USER.md"];
     let context = "";
     for (const file of filesToLoad) {
       const filePath = path.join(this.vaultPath, file);
       if (fs.existsSync(filePath)) {
         const content = fs.readFileSync(filePath, "utf-8");
-        // Truncate large files to 500 chars
         context += `\n[${file}]\n${content.slice(0, 500)}${content.length > 500 ? "..." : ""}\n`;
       }
     }
-
-    // Add cached graph schema
     const graphSchema = await this.contextCache.getGraphSchema(this.graphDB);
     context += `\n${graphSchema}`;
-
     return context;
   }
 
-  // Invalidate cache (call after /buildgraph)
   invalidateCache() {
     this.contextCache.invalidate();
   }
