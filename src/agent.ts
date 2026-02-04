@@ -365,6 +365,14 @@ ${bootstrap}`;
       { role: "user", content: message }
     ];
 
+    // GPT-4o-mini pricing (per 1M tokens)
+    const INPUT_PRICE = 0.15;  // $0.15/1M input
+    const OUTPUT_PRICE = 0.60; // $0.60/1M output
+    const KRW_RATE = 1450;     // USD to KRW
+
+    let totalInputTokens = 0;
+    let totalOutputTokens = 0;
+
     try {
       let response = await withRetry(
         () => this.openaiClient!.chat.completions.create({
@@ -372,7 +380,8 @@ ${bootstrap}`;
           messages,
           tools: OPENAI_TOOLS,
           tool_choice: "auto",
-          stream: true
+          stream: true,
+          stream_options: { include_usage: true }
         }),
         "OpenAI API"
       );
@@ -393,6 +402,11 @@ ${bootstrap}`;
             if (tc.function?.name) toolCalls[tc.index].function.name += tc.function.name;
             if (tc.function?.arguments) toolCalls[tc.index].function.arguments += tc.function.arguments;
           }
+        }
+        // Capture usage from final chunk
+        if (chunk.usage) {
+          totalInputTokens += chunk.usage.prompt_tokens;
+          totalOutputTokens += chunk.usage.completion_tokens;
         }
       }
 
@@ -420,7 +434,8 @@ ${bootstrap}`;
           () => this.openaiClient!.chat.completions.create({
             model: "gpt-4o-mini",
             messages,
-            stream: true
+            stream: true,
+            stream_options: { include_usage: true }
           }),
           "OpenAI API (tool)"
         );
@@ -432,12 +447,16 @@ ${bootstrap}`;
             fullText += content;
             if (onChunk) onChunk(fullText);
           }
+          if (chunk.usage) {
+            totalInputTokens += chunk.usage.prompt_tokens;
+            totalOutputTokens += chunk.usage.completion_tokens;
+          }
         }
       }
 
-      const tokens = Math.ceil((systemPrompt.length + message.length + fullText.length) / 3);
-      const cost = parseFloat(((tokens / 1e6 * 0.15 + (fullText.length/3) / 1e6 * 0.6) * 1400).toFixed(1));
-      
+      const tokens = totalInputTokens + totalOutputTokens;
+      const cost = parseFloat(((totalInputTokens / 1e6 * INPUT_PRICE + totalOutputTokens / 1e6 * OUTPUT_PRICE) * KRW_RATE).toFixed(1));
+
       return { text: fullText, stats: `[OpenAI|T:${tokens}|${cost}원]`, tokens, cost };
     } catch (err: any) {
       logError("OpenAI", err);
@@ -451,12 +470,20 @@ ${bootstrap}`;
     }));
     messages.push({ role: "user", content: message });
 
+    // Claude Sonnet 4 pricing (per 1M tokens)
+    const INPUT_PRICE = 3.0;   // $3/1M input
+    const OUTPUT_PRICE = 15.0; // $15/1M output
+    const KRW_RATE = 1450;     // USD to KRW
+
+    let totalInputTokens = 0;
+    let totalOutputTokens = 0;
+
     const systemParam = isOAuthToken(this.apiKey)
       ? [
           { type: "text" as const, text: "You are Claude Code, Anthropic's official CLI for Claude.", cache_control: { type: "ephemeral" as const } },
           { type: "text" as const, text: systemPrompt, cache_control: { type: "ephemeral" as const } }
         ]
-      : buildClaudeCachedSystem(this.persona.instructions.join("\n"), systemPrompt);
+      : buildClaudeCachedSystem(this.persona.instructions?.join("\n") || "", systemPrompt);
 
     try {
       let fullText = "";
@@ -475,7 +502,11 @@ ${bootstrap}`;
       );
 
       for await (const event of stream) {
-        if (event.type === "content_block_delta" && event.delta.type === "text_delta") {
+        if (event.type === "message_start" && event.message.usage) {
+          totalInputTokens += event.message.usage.input_tokens;
+        } else if (event.type === "message_delta" && (event as any).usage) {
+          totalOutputTokens += (event as any).usage.output_tokens;
+        } else if (event.type === "content_block_delta" && event.delta.type === "text_delta") {
           fullText += event.delta.text;
           if (onChunk) onChunk(fullText);
         } else if (event.type === "content_block_start" && event.content_block.type === "tool_use") {
@@ -489,7 +520,7 @@ ${bootstrap}`;
       if (currentToolUse) {
         const input = JSON.parse(currentToolUse.input);
         const result = await this.handleToolCall(currentToolUse.name, input);
-        
+
         messages.push({ role: "assistant", content: [{ type: "tool_use", id: currentToolUse.id, name: currentToolUse.name, input }] });
         messages.push({ role: "user", content: [{ type: "tool_result", tool_use_id: currentToolUse.id, content: result }] });
 
@@ -506,15 +537,19 @@ ${bootstrap}`;
 
         fullText = "";
         for await (const event of secondStream) {
-          if (event.type === "content_block_delta" && event.delta.type === "text_delta") {
+          if (event.type === "message_start" && event.message.usage) {
+            totalInputTokens += event.message.usage.input_tokens;
+          } else if (event.type === "message_delta" && (event as any).usage) {
+            totalOutputTokens += (event as any).usage.output_tokens;
+          } else if (event.type === "content_block_delta" && event.delta.type === "text_delta") {
             fullText += event.delta.text;
             if (onChunk) onChunk(fullText);
           }
         }
       }
 
-      const tokens = Math.ceil((systemPrompt.length + message.length + fullText.length) / 3);
-      const cost = parseFloat(((tokens / 1e6 * 3 + (fullText.length/3) / 1e6 * 15) * 1400).toFixed(1));
+      const tokens = totalInputTokens + totalOutputTokens;
+      const cost = parseFloat(((totalInputTokens / 1e6 * INPUT_PRICE + totalOutputTokens / 1e6 * OUTPUT_PRICE) * KRW_RATE).toFixed(1));
       return { text: fullText, stats: `[Claude|T:${tokens}|${cost}원]`, tokens, cost };
     } catch (err: any) {
       logError("Claude", err);
@@ -568,9 +603,16 @@ ${bootstrap}`;
         calls = parts.filter((p: any) => p.functionCall);
       }
 
+      // Gemini 3 Flash pricing (per 1M tokens) - approximation
+      const INPUT_PRICE = 0.075;  // ~$0.075/1M input
+      const OUTPUT_PRICE = 0.30;  // ~$0.30/1M output
+      const KRW_RATE = 1450;
+
       const usage = (await result.response).usageMetadata;
+      const inputTokens = usage?.promptTokenCount || 0;
+      const outputTokens = usage?.candidatesTokenCount || 0;
       const tokens = usage?.totalTokenCount || 0;
-      const cost = usage ? parseFloat(((usage.promptTokenCount / 1e6 * 0.5 + usage.candidatesTokenCount / 1e6 * 3) * 1400).toFixed(1)) : 0;
+      const cost = parseFloat(((inputTokens / 1e6 * INPUT_PRICE + outputTokens / 1e6 * OUTPUT_PRICE) * KRW_RATE).toFixed(1));
       return { text: fullText, stats: `[Gemini|T:${tokens}|${cost}원]`, tokens, cost };
     } catch (err: any) {
       logError("Gemini", err);
@@ -581,8 +623,10 @@ ${bootstrap}`;
   async chatWithImage(message: string, imageBuffer: Buffer, mimeType: string): Promise<{ text: string; stats: string }> {
     const bootstrap = await this.getBootstrapContext();
     const systemPrompt = this.buildSystemPrompt(bootstrap);
+    const KRW_RATE = 1450;
 
     if (this.provider === "claude") {
+      // Claude Sonnet 4: $3/1M input, $15/1M output
       try {
         const response = await this.claudeClient!.messages.create({
           model: "claude-sonnet-4-20250514", max_tokens: 4096, system: systemPrompt,
@@ -593,10 +637,11 @@ ${bootstrap}`;
         });
         const text = response.content.find((b): b is Anthropic.TextBlock => b.type === "text")?.text || "";
         const tokens = response.usage.input_tokens + response.usage.output_tokens;
-        const cost = ((response.usage.input_tokens / 1e6 * 3 + response.usage.output_tokens / 1e6 * 15) * 1400).toFixed(1);
+        const cost = ((response.usage.input_tokens / 1e6 * 3 + response.usage.output_tokens / 1e6 * 15) * KRW_RATE).toFixed(1);
         return { text, stats: `[Claude|T:${tokens}|${cost}원]` };
       } catch (err: any) { return { text: `Error: ${err.message}`, stats: "" }; }
     } else if (this.provider === "openai") {
+      // GPT-4o-mini: $0.15/1M input, $0.60/1M output
       try {
         const response = await this.openaiClient!.chat.completions.create({
           model: "gpt-4o-mini",
@@ -611,10 +656,11 @@ ${bootstrap}`;
         const text = response.choices[0].message.content || "";
         const usage = response.usage!;
         const tokens = usage.total_tokens;
-        const cost = ((usage.prompt_tokens / 1e6 * 0.15 + usage.completion_tokens / 1e6 * 0.6) * 1400).toFixed(1);
+        const cost = ((usage.prompt_tokens / 1e6 * 0.15 + usage.completion_tokens / 1e6 * 0.6) * KRW_RATE).toFixed(1);
         return { text, stats: `[OpenAI|T:${tokens}|${cost}원]` };
       } catch (err: any) { return { text: `Error: ${err.message}`, stats: "" }; }
     } else {
+      // Gemini 3 Flash: ~$0.075/1M input, ~$0.30/1M output
       try {
         const model = this.geminiClient!.getGenerativeModel({ model: "gemini-3-flash-preview" });
         const result = await model.generateContent([
@@ -624,7 +670,7 @@ ${bootstrap}`;
         const response = await result.response;
         const usage = response.usageMetadata;
         const tokens = usage?.totalTokenCount || 0;
-        const cost = usage ? ((usage.promptTokenCount / 1e6 * 0.5 + usage.candidatesTokenCount / 1e6 * 3) * 1400).toFixed(1) : "0";
+        const cost = usage ? ((usage.promptTokenCount / 1e6 * 0.075 + usage.candidatesTokenCount / 1e6 * 0.3) * KRW_RATE).toFixed(1) : "0";
         return { text: response.text(), stats: `[Gemini|T:${tokens}|${cost}원]` };
       } catch (err: any) { return { text: `Error: ${err.message}`, stats: "" }; }
     }
