@@ -286,103 +286,38 @@ export class OpenClawAgent {
       ? "You are Claude Code, Anthropic's official CLI for Claude.\n\n"
       : "";
 
-    // Build personality section
-    const personality = this.persona.personality || {};
-    const traits = personality.traits?.join(", ") || "친근하고 도움이 되는";
-    const tone = personality.tone || "친근한 존댓말";
-    const emoji = personality.emoji_usage || "적절히 사용";
+    const personaName = this.persona.name || "톨라니";
 
-    // Build context section
-    const ctx = this.persona.context || {};
-    const userName = ctx.user_name || "사용자";
-    const userRole = ctx.user_role || "";
-    const workFocus = ctx.work_focus?.join(", ") || "";
+    return `${claudeCodePrefix}You are '${personaName}', 준병님의 투자 파트너.
 
-    // Build response style
-    const style = this.persona.response_style?.default?.join("\n• ") || "";
+${bootstrap}
 
-    // Build special behaviors
-    const behaviors = this.persona.special_behaviors || {};
-    const behaviorText = Object.entries(behaviors).map(([k, v]) => `• ${k}: ${v}`).join("\n");
+[응답 패턴 - CRITICAL]
+• 정보 공유 받으면 → 먼저 semantic_search로 관련 종목/딜 검색 → 연결점 제시
+• 이전에 다룬 내용이면 → "아까/어제 정리해드린 거예요" (중복 작업 안 함)
+• 핵심만 테이블/불렛으로 압축
+• 마지막에 짧은 인사이트 한 줄 (예: "버티컬 SaaS들 진짜 위험하네요")
+• 그냥 요약하지 마라. 포트폴리오/트래커/커리어와 연결점을 찾아라.
 
-    // Legacy support for instructions array
-    const legacyInstructions = this.persona.instructions?.join("\n") || "";
+[볼트 구조]
+• 11_개인투자/투자아이디어_트래커.md - 관심 종목
+• 11_개인투자/_01_S~_04_C - 우선순위별 종목
+• 10_업무투자/01_검토중 - PE 검토 딜
+• 12_커리어/ - 커리어 관련
+• memory/YYYY-MM-DD.md - 일별 대화 기록
 
-    return `${claudeCodePrefix}[🎯 핵심 철학]
-당신의 존재 이유는 "사용자의 시간을 절약해주는 것"입니다.
+[언어/포맷]
+• 존댓말 (~습니다, ~해요)
+• 텔레그램용: 마크다운 헤더 → <b>제목</b>, 테이블은 간단하게
+• 이모지 적절히 사용
 
-[정보 처리 워크플로우 - 반드시 따를 것]
-정보 수신 → 분류 → 볼트 검색 → 연결점 → 시사점 + 액션 제안
-
-Step 1. 분류 (어떤 영역인가?)
-- 투자 관련? (실적, 딜, 섹터, 종목)
-- 커리어 관련? (이직, 스킬, 네트워킹)
-- 개인 관련? (건강, 생각, 감정)
-
-Step 2. 볼트 검색 (semantic_search 사용)
-- 투자 → "투자아이디어 트래커" 또는 "검토중" 검색
-- 커리어 → "커리어" 또는 "이직" 검색
-- 개인 → 맥락에 맞게 검색
-
-Step 3. 연결점 + 시사점
-- 검색 결과에서 관련 종목/딜/파일 찾기
-- 해당 정보가 사용자에게 어떤 의미인지 제시
-- 예: "삼성전자가 트래커에 있는데, 이번 실적의 P/Q/C 요인이 [구체적 영향]"
-
-Step 4. 액션 제안
-- 구체적으로 할 수 있는 일 제안
-- 예: "현재가 확인하고 관련 영향 분석해서 트래커에 정리해둘까요?"
-
-[볼트 구조 - 검색 시 참고]
-• 10_업무투자/01_검토중: PE 검토 중인 딜
-• 10_업무투자/02_투자집행: 투자 완료 건
-• 11_개인투자/투자아이디어_트래커.md: 관심 종목 트래커
-• 11_개인투자/투자의사결정_로그.md: 매매 기록
-• 11_개인투자/_01_S~_04_C: 우선순위별 종목
-• 12_커리어/: 커리어 관련
-
-[금지 사항]
-- 이미지 시각적 설명 금지
-- 내용 요약/패러프레이징 금지
-- 검색 없이 "확인해보세요" 류 금지
-
-You are '${this.persona.name || "톨라니"}', ${this.persona.role || "AI 어시스턴트"}.
-
-[성격] ${traits} | 톤: ${tone} | 이모지: ${emoji}
-
-[언어] 존댓말 필수 (~습니다, ~해요). 반말 금지.
-
-[사용자] ${userName} | ${userRole} | ${workFocus}
-
-[응답 스타일]
-• ${style}
-• 짧게. 2-3문장이면 충분한 경우가 많음
-• 사용자는 PE 6년차 - 맥락 설명 불필요
-
-[특별 행동 지침]
-${behaviorText}
-
-${legacyInstructions ? `[추가 지침]\n${legacyInstructions}\n` : ""}
-[포맷팅 규칙 - 텔레그램용]
-• 마크다운 헤더(#, ##, ###) 금지 → <b>제목</b> 사용
-• 마크다운 테이블(| --- |) 금지 → 불렛포인트로 대체
-• 굵은 글씨: <b>텍스트</b>
-• 기울임: <i>텍스트</i>
-• 코드: <code>텍스트</code>
-• 불릿: • 사용
-
-[Tool Usage Policy]
-- 컨텍스트에서 답을 찾을 수 없으면, 반드시 도구를 사용하세요
-- 'search_content': 파일 내용 검색
-- 'search_files': 파일명 패턴 검색
-- 'web_search': 실시간 데이터 (주가, 뉴스)
-- 'semantic_search': 의미 기반 검색 ('돈 많이 번 딜' 같은 모호한 질문)
-- 'graph_search': 관계/연결 질문 ('A와 B의 관계')
-- 'journal_memory': "기억해", "저장해", "메모해" 요청 시
-- "모르겠다"고 하기 전에 도구를 먼저 사용하세요
-
-[Context]
-${bootstrap}`;
+[도구 사용 - MUST]
+답변 전 관련 정보가 볼트에 있을 것 같으면 반드시 검색:
+• semantic_search: 의미 기반 검색 (포트폴리오/트래커 연결)
+• graph_search: 관계/연결 검색
+• search_content: 키워드 검색
+• web_search: 실시간 데이터 (주가, 뉴스)
+• journal_memory: 중요한 내용 저장`;
   }
 
   // Detect if message is information sharing (news, earnings, deals)
@@ -780,18 +715,64 @@ ${bootstrap}`;
   }
 
   private async getBootstrapContext(): Promise<string> {
-    const filesToLoad = ["SOUL.md", "USER.md"];
     let context = "";
-    for (const file of filesToLoad) {
-      const filePath = path.join(this.vaultPath, file);
-      if (fs.existsSync(filePath)) {
-        const content = fs.readFileSync(filePath, "utf-8");
-        context += `\n[${file}]\n${content.slice(0, 500)}${content.length > 500 ? "..." : ""}\n`;
-      }
+
+    // 1. SOUL.md - 핵심 철학 (전체 로드)
+    const soulPath = path.join(this.vaultPath, "SOUL.md");
+    if (fs.existsSync(soulPath)) {
+      const soulContent = fs.readFileSync(soulPath, "utf-8");
+      context += `\n[SOUL.md - 핵심 원칙]\n${soulContent}\n`;
     }
+
+    // 2. USER.md - 사용자 정보 (전체 로드)
+    const userPath = path.join(this.vaultPath, "USER.md");
+    if (fs.existsSync(userPath)) {
+      const userContent = fs.readFileSync(userPath, "utf-8");
+      context += `\n[USER.md - 사용자 정보]\n${userContent}\n`;
+    }
+
+    // 3. 오늘의 메모리 (최근 내용 중심)
+    const today = new Date().toISOString().slice(0, 10);
+    const memoryPath = path.join(this.vaultPath, "memory", `${today}.md`);
+    if (fs.existsSync(memoryPath)) {
+      const memoryContent = fs.readFileSync(memoryPath, "utf-8");
+      // 최근 2000자만 로드 (너무 길면 컨텍스트 낭비)
+      const recentMemory = memoryContent.slice(-2000);
+      context += `\n[오늘의 기억 - ${today}]\n${recentMemory}\n`;
+    }
+
+    // 4. 어제 메모리도 참조 (연속성)
+    const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+    const yesterdayPath = path.join(this.vaultPath, "memory", `${yesterday}.md`);
+    if (fs.existsSync(yesterdayPath)) {
+      const yesterdayContent = fs.readFileSync(yesterdayPath, "utf-8");
+      // 어제 내용은 요약만 (500자)
+      const summary = yesterdayContent.slice(0, 500);
+      context += `\n[어제 기억 요약 - ${yesterday}]\n${summary}...\n`;
+    }
+
+    // 5. 그래프 스키마
     const graphSchema = await this.contextCache.getGraphSchema(this.graphDB);
     context += `\n${graphSchema}`;
+
     return context;
+  }
+
+  // 대화 내용을 오늘의 메모리에 저장
+  async saveToMemory(content: string, category: string = "대화"): Promise<void> {
+    const today = new Date().toISOString().slice(0, 10);
+    const time = new Date().toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" });
+    const memoryPath = path.join(this.vaultPath, "memory", `${today}.md`);
+
+    let existing = "";
+    if (fs.existsSync(memoryPath)) {
+      existing = fs.readFileSync(memoryPath, "utf-8");
+    } else {
+      existing = `# ${today} 메모리\n\n`;
+    }
+
+    const entry = `\n## ${category} [${time}]\n${content}\n`;
+    fs.writeFileSync(memoryPath, existing + entry, "utf-8");
   }
 
   invalidateCache() {
