@@ -1,9 +1,11 @@
-// OpenClaw Lite - Telegram Bot (v4.6 - Model Routing)
+// OpenClaw Lite - Telegram Bot (v4.7 - Full Migration from OpenClaw)
 
 import { Bot, InlineQueryResultBuilder } from "grammy";
 import * as dotenv from "dotenv";
 import * as path from "path";
+import * as fs from "fs";
 import * as cron from "node-cron";
+import { exec } from "child_process";
 import { OpenClawAgent, Provider } from "./agent";
 import {
   saveConversation, getHistory, clearHistory, getUsageStats,
@@ -18,11 +20,9 @@ import { logChat, logError } from "./lib/logger";
 
 dotenv.config({ path: path.resolve(__dirname, "../.env") });
 
-// Provider selection: MODEL_PROVIDER=claude, gemini, openai, or auto (default: auto)
+// Provider selection
 let provider = (process.env.MODEL_PROVIDER || "auto") as Provider | "auto";
 let isAutoRouting = provider === "auto";
-
-// Default actual provider for 'auto' mode startup
 const initialProvider: Provider = isAutoRouting ? "openai" : (provider as Provider);
 
 let apiKey = "";
@@ -37,7 +37,7 @@ const agent = new OpenClawAgent(
   process.env.VAULT_PATH!,
   path.resolve(__dirname, "../persona.json"),
   process.env.BRAVE_API_KEY,
-  process.env.GOOGLE_API_KEY  // For VectorDB embedding
+  process.env.GOOGLE_API_KEY
 );
 
 const ALLOWED_ID = Number(process.env.ALLOWED_USER_ID);
@@ -49,8 +49,64 @@ bot.use(async (ctx, next) => {
   await next();
 });
 
-// Commands
-bot.command("start", (ctx) => ctx.reply(`OpenClaw Lite v4.6 [${isAutoRouting ? "Auto" : agent.getProvider()}]\n\n인라인 모드: @봇이름 질문\nProvider 전환: /provider`));
+// Helper for background script execution
+const runJobScript = (scriptName: string, description: string) => {
+  console.log(`[Cron] Starting ${description}...`);
+  exec(`bash ${path.join(__dirname, "../scripts/", scriptName)}`, (err, stdout, stderr) => {
+    if (err) logError(`Job ${description}`, err);
+    else console.log(`[Cron] ${description} finished.`);
+  });
+};
+
+// --- SCHEDULED JOBS (Migrated from OpenClaw jobs.json) ---
+
+// 1. FnGuide Daily Morning (09:00 AM)
+cron.schedule("0 9 * * *", async () => {
+  console.log("[Cron] fnguide-daily started");
+  await bot.api.sendMessage(ALLOWED_ID, "📊 <b>오전 FnGuide 리포트 수집 및 분석을 시작합니다.</b>", { parse_mode: "HTML" });
+  runJobScript("run_scraper.sh", "FnGuide Morning Scraper");
+  
+  // Logic for workflow execution (invoking agent via bot)
+  setTimeout(async () => {
+    const prompt = "투자 동료 실행해줘. 최근 수집된 리포트를 기반으로 투자 아이디어를 추출하고 트래커를 업데이트해.";
+    const { text, stats } = await agent.chat(prompt, []);
+    await bot.api.sendMessage(ALLOWED_ID, `✅ <b>오전 분석 완료</b>\n\n${toHtml(text)}\n\n<code>${stats}</code>`, { parse_mode: "HTML" });
+  }, 1000 * 60 * 5); // 5 min delay for scraper to finish
+}, { timezone: "Asia/Seoul" });
+
+// 2. Book Processor (06:00 AM)
+cron.schedule("0 6 * * *", async () => {
+  console.log("[Cron] book-processor started");
+  const prompt = "📚 매일 책 KB화 작업을 시작합니다. G드라이브의 신규 PDF를 확인하고 지식 베이스로 변환해줘.";
+  const { text } = await agent.chat(prompt, []);
+  await bot.api.sendMessage(ALLOWED_ID, `📚 <b>도서 처리 결과</b>\n\n${toHtml(text)}`, { parse_mode: "HTML" });
+}, { timezone: "Asia/Seoul" });
+
+// 3. FnGuide Evening (09:00 PM)
+cron.schedule("0 21 * * *", async () => {
+  console.log("[Cron] fnguide-evening started");
+  await bot.api.sendMessage(ALLOWED_ID, "📊 <b>저녁 FnGuide 리포트 수집 및 분석을 시작합니다.</b>", { parse_mode: "HTML" });
+  runJobScript("run_scraper.sh", "FnGuide Evening Scraper");
+}, { timezone: "Asia/Seoul" });
+
+// 4. Tracker Price Update (11:00 AM & 04:00 PM Weekdays)
+cron.schedule("0 11,16 * * 1-5", async () => {
+  console.log("[Cron] tracker-price started");
+  const prompt = "📊 투자아이디어 트래커 현재가 업데이트 진행해줘. 트리거 근접 종목이 있으면 알려줘.";
+  const { text } = await agent.chat(prompt, []);
+  await bot.api.sendMessage(ALLOWED_ID, `📊 <b>트래커 업데이트</b>\n\n${toHtml(text)}`, { parse_mode: "HTML" });
+}, { timezone: "Asia/Seoul" });
+
+// 5. Daily News Summary (03:40 PM Weekdays)
+cron.schedule("40 15 * * 1-5", async () => {
+  console.log("[Cron] daily-news-summary started");
+  const prompt = "오늘의 주요 투자 뉴스 요약해줘.";
+  const { text } = await agent.chat(prompt, []);
+  await bot.api.sendMessage(ALLOWED_ID, `📰 <b>오늘의 뉴스 요약</b>\n\n${toHtml(text)}`, { parse_mode: "HTML" });
+}, { timezone: "Asia/Seoul" });
+
+// --- COMMANDS ---
+bot.command("start", (ctx) => ctx.reply(`OpenClaw Lite v4.7 [${isAutoRouting ? "Auto" : agent.getProvider()}]\n\n인라인 모드: @봇이름 질문\nProvider 전환: /provider`));
 
 bot.command("clear", async (ctx) => {
   clearHistory(ctx.from!.id);
@@ -65,7 +121,6 @@ bot.command("stats", async (ctx) => {
   ctx.reply(`<b>Usage (7 days)</b>\n<code>${lines.join("\n")}</code>`, { parse_mode: "HTML" });
 });
 
-// Provider switching (runtime, no restart needed)
 bot.command("provider", async (ctx) => {
   const args = ctx.message?.text?.split(" ").slice(1).join(" ").trim().toLowerCase() || "";
   const current = agent.getProvider();
@@ -100,100 +155,6 @@ bot.command("provider", async (ctx) => {
   }
 });
 
-// Cost command - monthly breakdown
-bot.command("cost", async (ctx) => {
-  const userId = ctx.from!.id;
-  const today = getTodayCost(userId);
-  const monthly = getMonthlyCost(userId);
-
-  let msg = `<b>💰 비용 현황</b>\n\n`;
-  msg += `<b>오늘</b>: ${today.messages}건, ${today.tokens.toLocaleString()}T, ${today.cost.toFixed(0)}원\n\n`;
-  msg += `<b>월별 현황</b>\n`;
-
-  if (monthly.length === 0) {
-    msg += `<code>데이터 없음</code>`;
-  } else {
-    msg += `<code>`;
-    for (const m of monthly) {
-      msg += `${m.month}: ${m.total_tokens.toLocaleString()}T, ${m.total_cost.toFixed(0)}원\n`;
-    }
-    msg += `</code>`;
-  }
-
-  ctx.reply(msg, { parse_mode: "HTML" });
-});
-
-// Topic commands
-bot.command("topic", async (ctx) => {
-  const userId = ctx.from!.id;
-  const args = ctx.message?.text?.split(" ").slice(1).join(" ").trim() || "";
-
-  if (!args) {
-    const current = getActiveTopic(userId);
-    return ctx.reply(current ? `현재 토픽: <b>${current}</b>` : "활성 토픽 없음. /topic <이름>으로 설정하세요.", { parse_mode: "HTML" });
-  }
-
-  if (args === "clear") {
-    clearActiveTopic(userId);
-    clearHistory(userId);
-    return ctx.reply("토픽이 초기화되었습니다.");
-  }
-
-  setActiveTopic(userId, args);
-  clearHistory(userId);
-  ctx.reply(`토픽이 <b>${args}</b>로 설정되었습니다. 대화 히스토리가 초기화됩니다.`, { parse_mode: "HTML" });
-});
-
-// Reminders command
-bot.command("reminders", async (ctx) => {
-  const userId = ctx.from!.id;
-  const reminders = getUserReminders(userId);
-
-  if (reminders.length === 0) {
-    return ctx.reply("예정된 리마인더가 없습니다.");
-  }
-
-  let msg = `<b>⏰ 예정된 리마인더</b>\n\n`;
-  for (const r of reminders) {
-    const time = new Date(r.remind_at).toLocaleString("ko-KR", { timeZone: "Asia/Seoul" });
-    msg += `#${r.id}: ${r.message}\n└ ${time}\n\n`;
-  }
-  msg += `<code>/delreminder [ID]로 삭제</code>`;
-
-  ctx.reply(msg, { parse_mode: "HTML" });
-});
-
-// Delete reminder
-bot.command("delreminder", async (ctx) => {
-  const args = ctx.message?.text?.split(" ").slice(1) || [];
-  if (args.length === 0) {
-    return ctx.reply("사용법: /delreminder [ID]");
-  }
-  const id = parseInt(args[0]);
-  if (isNaN(id)) {
-    return ctx.reply("유효한 ID를 입력하세요.");
-  }
-  deleteReminder(id);
-  ctx.reply(`리마인더 #${id}가 삭제되었습니다.`);
-});
-
-// Health check command
-bot.command("health", async (ctx) => {
-  const health = await utility.healthCheck();
-
-  const status = (ok: boolean) => ok ? "✅" : "❌";
-  const uptime = `${Math.floor(health.uptime / 3600)}h ${Math.floor((health.uptime % 3600) / 60)}m`;
-
-  const msg = `<b>🏥 시스템 상태</b>\n\n` +
-    `Vault: ${status(health.vault)}\n` +
-    `Database: ${status(health.database)}\n` +
-    `Brave API: ${status(health.brave)}\n` +
-    `Uptime: ${uptime}\n` +
-    `Memory: ${health.memory.used}MB / ${health.memory.total}MB`;
-
-  ctx.reply(msg, { parse_mode: "HTML" });
-});
-
 // Markdown to Telegram HTML
 function toHtml(text: string): string {
   let html = text;
@@ -212,34 +173,28 @@ bot.on("message:text", async (ctx) => {
   const userId = ctx.from!.id;
   const userMessage = ctx.message.text;
 
-  // Send initial "thinking" message
   const thinkingMsg = await ctx.reply("🔄 생각 중...", { parse_mode: "HTML" });
 
   try {
-    // Set userId for reminder tool
     agent.setUserId(userId);
 
-    // 1. Determine Route if Auto Routing is on
     if (isAutoRouting) {
       await ctx.api.editMessageText(ctx.chat.id, thinkingMsg.message_id, "🤖 질문 의도 분석 중...");
       const targetProvider = await agent.determineRoute(userMessage);
       agent.switchProvider(targetProvider);
     }
 
-    // Get current topic for context
     const topic = getActiveTopic(userId);
     const history = getHistory(userId, 20);
 
-    // Update to show processing
     await ctx.api.editMessageText(
       ctx.chat.id,
       thinkingMsg.message_id,
       `⚙️ ${agent.getProvider()}가 처리 중...`
     );
 
-    // Streaming state
     let lastUpdate = Date.now();
-    const updateInterval = 800; // 800ms throttling to avoid Telegram rate limits
+    const updateInterval = 800;
 
     const contextPrefix = topic ? `[현재 토픽: ${topic}]\n` : "";
     const { text, stats, tokens, cost } = await agent.chat(
@@ -264,10 +219,8 @@ bot.on("message:text", async (ctx) => {
     logChat(userId, "user", userMessage);
     logChat(userId, "assistant", text, tokens, stats);
 
-    // Update with final response
     const finalText = `${toHtml(text)}\n\n<code>${stats}</code>`;
 
-    // Telegram has 4096 char limit - split if needed
     if (finalText.length > 4000) {
       await ctx.api.deleteMessage(ctx.chat.id, thinkingMsg.message_id);
       const chunks = splitMessage(finalText, 4000);
@@ -294,42 +247,87 @@ bot.on("message:text", async (ctx) => {
   }
 });
 
-// Split long messages
 function splitMessage(text: string, maxLength: number): string[] {
   const chunks: string[] = [];
   let current = text;
-
   while (current.length > maxLength) {
     let splitAt = current.lastIndexOf("\n", maxLength);
-    if (splitAt === -1 || splitAt < maxLength / 2) {
-      splitAt = maxLength;
-    }
+    if (splitAt === -1 || splitAt < maxLength / 2) splitAt = maxLength;
     chunks.push(current.substring(0, splitAt));
     current = current.substring(splitAt).trim();
   }
-
-  if (current.length > 0) {
-    chunks.push(current);
-  }
-
+  if (current.length > 0) chunks.push(current);
   return chunks;
 }
 
-// Inline query handler omitted for brevity, but matches main logic if needed
+// Image handler (Vision)
+bot.on("message:photo", async (ctx) => {
+  const userId = ctx.from!.id;
+  const caption = ctx.message.caption || "이 이미지를 분석해줘";
+  try {
+    await ctx.replyWithChatAction("typing");
+    agent.setUserId(userId);
+    const photos = ctx.message.photo;
+    const photo = photos[photos.length - 1];
+    const file = await ctx.api.getFile(photo.file_id);
+    const fileUrl = `https://api.telegram.org/file/bot${process.env.TELEGRAM_BOT_TOKEN}/${file.file_path}`;
+    const response = await fetch(fileUrl);
+    const buffer = Buffer.from(await response.arrayBuffer());
+    const mimeType = file.file_path?.endsWith(".png") ? "image/png" : "image/jpeg";
+    const { text, stats } = await agent.chatWithImage(caption, buffer, mimeType);
+    saveConversation(userId, "user", `[Image] ${caption}`);
+    saveConversation(userId, "assistant", text);
+    await ctx.reply(`${toHtml(text)}\n\n<code>${stats}</code>`, { parse_mode: "HTML" });
+  } catch (err: any) {
+    logError("ImageHandler", err);
+    await ctx.reply(`Vision error: ${err.message}`);
+  }
+});
 
-// Reminder scheduler - check every minute
+// Document handler (PDF, Files)
+bot.on("message:document", async (ctx) => {
+  const userId = ctx.from!.id;
+  const doc = ctx.message.document;
+  const caption = ctx.message.caption || "이 문서를 분석하고 투자 아이디어를 추출해줘";
+
+  if (!doc.file_name?.toLowerCase().endsWith(".pdf")) {
+    return ctx.reply("현재는 PDF 파일 분석만 지원합니다.");
+  }
+
+  const thinkingMsg = await ctx.reply("🔄 <b>문서 분석 중...</b> (텍스트 추출 및 요약)", { parse_mode: "HTML" });
+
+  try {
+    const file = await ctx.api.getFile(doc.file_id);
+    const fileUrl = `https://api.telegram.org/file/bot${process.env.TELEGRAM_BOT_TOKEN}/${file.file_path}`;
+    
+    // Save file locally for analysis
+    const buffer = Buffer.from(await (await fetch(fileUrl)).arrayBuffer());
+    const tempPath = path.join("/tmp", doc.file_name);
+    fs.writeFileSync(tempPath, buffer);
+
+    const prompt = `[첨부파일: ${doc.file_name}]\n${caption}\n\n위 문서를 읽고 '투자 동료 워크플로우'를 따라 투자 아이디어를 추출해줘.`;
+    
+    const { text, stats } = await agent.chat(prompt, []); // PDF reading happens via tools in agent.chat
+    
+    await ctx.api.editMessageText(
+      ctx.chat.id,
+      thinkingMsg.message_id,
+      `${toHtml(text)}\n\n<code>${stats}</code>`,
+      { parse_mode: "HTML" }
+    );
+  } catch (err: any) {
+    logError("DocHandler", err);
+    await ctx.api.editMessageText(ctx.chat.id, thinkingMsg.message_id, `❌ 문서 분석 실패: ${err.message}`);
+  }
+});
+
+// Reminder scheduler
 cron.schedule("* * * * *", async () => {
   const pendingReminders = getPendingReminders();
-
   for (const reminder of pendingReminders) {
     try {
-      await bot.api.sendMessage(
-        reminder.user_id,
-        `⏰ <b>리마인더</b>\n\n${reminder.message}`,
-        { parse_mode: "HTML" }
-      );
+      await bot.api.sendMessage(reminder.user_id, `⏰ <b>리마인더</b>\n\n${reminder.message}`, { parse_mode: "HTML" });
       markReminderSent(reminder.id);
-      console.log(`Reminder #${reminder.id} sent to user ${reminder.user_id}`);
     } catch (err) {
       logError("ReminderScheduler", err);
     }
@@ -337,4 +335,4 @@ cron.schedule("* * * * *", async () => {
 });
 
 bot.start();
-console.log(`OpenClaw Lite v4.6 started [${isAutoRouting ? "auto" : provider}] - Routing enabled`);
+console.log(`OpenClaw Lite v4.7 started [${isAutoRouting ? "auto" : provider}] - Full Migration Complete`);

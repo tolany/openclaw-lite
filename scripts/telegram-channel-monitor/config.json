@@ -1,0 +1,95 @@
+{
+  "channels": [
+    {
+      "name": "darthacking",
+      "url": "https://t.me/darthacking",
+      "enabled": true
+    },
+    {
+      "name": "sunstudy1004",
+      "url": "https://t.me/sunstudy1004",
+      "enabled": true
+    },
+    {
+      "name": "Desperatestudycafe",
+      "url": "https://t.me/Desperatestudycafe",
+      "enabled": true
+    }
+  ],
+  "keywords": {
+    "alert": [
+      "파마리서치",
+      "214450",
+      "리쥬란",
+      "Rejuran"
+    ],
+    "track": [
+      "삼양식품",
+      "003230",
+      "에이비엘바이오",
+      "엘앤씨바이오",
+      "LG에너지솔루션",
+      "373220",
+      "LG화학",
+      "051910",
+      "금호석유화학",
+      "011780",
+      "기아",
+      "000270",
+      "대덕전자",
+      "대양전기공업",
+      "롯데렌탈",
+      "삼성전자",
+      "005930",
+      "샘씨엔에스",
+      "서진시스템",
+      "이수페타시스",
+      "파라다이스",
+      "034230",
+      "포스코인터내셔널",
+      "047050",
+      "한화비전",
+      "현대글로비스",
+      "현대모비스",
+      "012330",
+      "현대차",
+      "005380",
+      "SK하이닉스",
+      "하이브",
+      "HD한국조선해양",
+      "HD현대일렉트릭",
+      "LS ELECTRIC",
+      "태광",
+      "성광벤드",
+      "세아베스틸",
+      "클래시스",
+      "휴젤",
+      "실적발표",
+      "공시",
+      "IR",
+      "자사주",
+      "유상증자",
+      "무상증자",
+      "배당",
+      "분할",
+      "합병",
+      "대규모내부거래",
+      "주요주주",
+      "최대주주",
+      "수출",
+      "수입",
+      "관세청",
+      "통관"
+    ],
+    "case_sensitive": false
+  },
+  "forward": {
+    "alert_to_telegram": true,
+    "track_to_log": true,
+    "include_channel_name": true,
+    "max_length": 4000
+  },
+  "log": {
+    "track_file": "track_log.jsonl"
+  }
+}

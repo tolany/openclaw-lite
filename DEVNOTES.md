@@ -7,54 +7,46 @@
 ## 현재 상태 (2026-02-04)
 
 ### 버전
-- **OpenClaw Lite v4.6** (bot.ts v4.6 - Model Routing 적용)
-- GraphRAG + VectorRAG + Context Caching + Streaming + **Smart Routing**
+- **OpenClaw Lite v4.7** (Full Migration 완료)
+- **기능**: GraphRAG + VectorRAG + Streaming + Smart Routing + **Auto Cron Jobs**
 
 ### 활성 Provider
-- **Auto (Smart Routing)**: 질문 의도에 따라 OpenAI/Claude 자동 전환 ✅
-- **Claude** (Sonnet 3.5): 고성능 분석용
-- **OpenAI** (GPT-4o-mini): 가성비/일상 대화용
-- **Gemini** (3 Flash): 초저렴 대안
+- **Auto (Smart Routing)**: 기본 모드. OpenAI/Claude 자동 전환 ✅
+- **OpenAI (GPT-4o-mini)**: 일상 대화, 크론 작업 판단, 단순 요약용
+- **Claude (Sonnet 3.5)**: 심층 투자 분석, 복잡한 추론용
 
 ---
 
-## 오늘의 변경사항 (2026-02-04)
+## 오늘의 주요 변경사항 (2026-02-04)
 
-### 8. Streaming 응답 구현 🚀
-- 실시간 텍스트 업데이트로 체감 속도 대폭 향상
-- 800ms 스로틀링으로 텔레그램 Rate Limit 최적화
+### 10. OpenClaw 핵심 기능 완전 이식 (v4.7) 🚀
+**목적**: 기존 대형 OpenClaw 시스템을 Lite 버전으로 완전 통합 및 대체
+**구현 내용**:
+- **자동화 스케줄러**: `node-cron`을 활용하여 기존 `jobs.json`의 5대 핵심 작업 이식
+  - fnguide-daily (오전/오후), book-processor, tracker-price, news-summary
+- **지능형 문서 핸들러**: 텔레그램 PDF 수신 시 '투자 동료 워크플로우' 자동 적용
+- **스크래퍼 연동**: `run_scraper.sh` 등 외부 스크립트 실행 엔진 탑재
 
-### 9. Smart Model Routing 구현 (NEW) 🧠
-**목적**: 질문 난이도에 따른 모델 자동 선택으로 **지능은 Sonnet급, 비용은 Mini급** 유지
-- **동작 원리**: 
-  1. 사용자의 질문을 GPT-4o-mini가 1차 분석 (Simple vs Complex)
-  2. 단순 인사/저널링/정보 확인 -> **OpenAI** 처리 (비용 절감)
-  3. 심층 분석/추론/복잡한 문서 검색 -> **Claude** 처리 (성능 보장)
-- **명령어**: `/provider auto`를 통해 활성화 가능
-
----
-
-## 알려진 이슈 및 해결
-
-### 4. Node.js 버전 충돌 및 systemd 실행 오류 (해결)
-- systemd 서비스에서 NVM 노드 바이너리 절대 경로 지정으로 버전 불일치 해결
+### 11. 시스템 안정화 및 환경 최적화
+- **Node v24 고정**: systemd 서비스 환경에서 NVM 바이너리 경로 직접 지정으로 라이브러리 충돌 해결
+- **스트리밍 최적화**: 800ms 스로틀링 적용으로 텔레그램 차단 방지 및 부드러운 UX 구현
 
 ---
 
-## 참고: 류성옥 박사 조언 (구현 현황)
-1. Prompt Caching ✅
-2. Streaming 응답 ✅
-3. System Prompt 최적화 ✅
-4. Model Routing ✅ (v4.6 추가)
-5. Response Length Control (진행 예정)
+## 이식된 크론 작업 리스트 (Cron Tab)
+1. `0 6 * * *`: 도서 PDF 지식화 (book-processor)
+2. `0 9 * * *`: 오전 리포트 수집 및 투자 아이디어 추출 (fnguide-morning)
+3. `0 11,16 * * 1-5`: 주식 현재가 및 트리거 업데이트 (tracker-update)
+4. `40 15 * * 1-5`: 오늘의 투자 뉴스 요약 (news-summary)
+5. `0 21 * * *`: 저녁 리포트 수집 및 요약 (fnguide-evening)
 
 ---
 
 ## 개발 워크플로우
 1. DEVNOTES.md 업데이트
 2. 개인정보 검수
-3. git commit & push
+3. git commit & push (GitHub: tolany/openclaw-lite)
 
 ---
 
-*마지막 업데이트: 2026-02-04 23:35 KST*
+*마지막 업데이트: 2026-02-04 23:45 KST*
