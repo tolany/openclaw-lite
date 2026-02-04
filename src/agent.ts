@@ -385,16 +385,76 @@ ${legacyInstructions ? `[추가 지침]\n${legacyInstructions}\n` : ""}
 ${bootstrap}`;
   }
 
+  // Detect if message is information sharing (news, earnings, deals)
+  private isInformationSharing(message: string): boolean {
+    const patterns = [
+      /실적|earnings|매출|GPM|OPM|NIM|beat|miss/i,
+      /PE Deals|VC Deals|M&A|인수|투자|exit/i,
+      /트럼프|정책|규제|법안/i,
+      /섹터|업종|테마|주도주/i,
+      /Anthropic|OpenAI|Claude|GPT|AI/i,
+      /원전|반도체|메모리|네트워킹|광물/i,
+      /https?:\/\//,  // URL sharing
+      /요약|핵심|주요/,
+    ];
+    return patterns.some(p => p.test(message)) && message.length > 100;
+  }
+
+  // Extract search keywords from message
+  private extractSearchKeywords(message: string): string[] {
+    const keywords: string[] = [];
+
+    // Company/stock names (Korean and English)
+    const companyMatches = message.match(/[A-Z][a-z]+(?:\s[A-Z][a-z]+)*|[가-힣]+(?:전자|반도체|에너지|원전|바이오)/g);
+    if (companyMatches) keywords.push(...companyMatches.slice(0, 3));
+
+    // Sector keywords
+    const sectors = ['메모리', '반도체', '원전', 'AI', '소프트웨어', '헬스케어', '바이오', '광통신', 'SMR'];
+    sectors.forEach(s => {
+      if (message.includes(s)) keywords.push(s);
+    });
+
+    return [...new Set(keywords)].slice(0, 3);
+  }
+
   async chat(message: string, history: ChatMessage[] = [], onChunk?: (text: string) => void): Promise<{ text: string; stats: string; tokens: number; cost: number }> {
+    let contextPrefix = "";
+
+    // Auto-search for information sharing messages
+    if (this.isInformationSharing(message)) {
+      const keywords = this.extractSearchKeywords(message);
+      if (keywords.length > 0) {
+        try {
+          // Search tracker and portfolio
+          const searchResult = await this.vectorDB.search(keywords.join(" "), 5);
+          const results = searchResult?.results || [];
+          if (results.length > 0) {
+            const relevantDocs = results
+              .filter((r: any) => r.score > 0.3)
+              .map((r: any) => `• ${r.title || r.filePath}: ${r.preview || ''}`.slice(0, 200))
+              .join("\n");
+            if (relevantDocs) {
+              contextPrefix = `[자동 검색 결과 - 관련 문서]\n${relevantDocs}\n\n위 검색 결과를 참고하여 사용자의 포트폴리오/트래커와 연결점을 찾아 응답하세요.\n\n[사용자 메시지]\n`;
+            }
+          }
+        } catch (e) {
+          // Ignore search errors, proceed without context
+        }
+      }
+    }
+
     const bootstrap = await this.getBootstrapContext();
     const systemPrompt = this.buildSystemPrompt(bootstrap);
 
+    // Prepend context to message if we have search results
+    const enrichedMessage = contextPrefix ? contextPrefix + message : message;
+
     if (this.provider === "claude") {
-      return this.chatClaude(message, history, systemPrompt, onChunk);
+      return this.chatClaude(enrichedMessage, history, systemPrompt, onChunk);
     } else if (this.provider === "openai") {
-      return this.chatOpenAI(message, history, systemPrompt, onChunk);
+      return this.chatOpenAI(enrichedMessage, history, systemPrompt, onChunk);
     } else {
-      return this.chatGemini(message, history, systemPrompt, onChunk);
+      return this.chatGemini(enrichedMessage, history, systemPrompt, onChunk);
     }
   }
 
