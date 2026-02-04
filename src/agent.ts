@@ -739,16 +739,17 @@ ${relevantDocs}
 
   private async getBootstrapContext(): Promise<string> {
     let context = "";
+    const openclawDir = path.join(this.vaultPath, ".openclaw");
 
     // 1. SOUL.md - 핵심 철학 (전체 로드)
-    const soulPath = path.join(this.vaultPath, "SOUL.md");
+    const soulPath = path.join(openclawDir, "SOUL.md");
     if (fs.existsSync(soulPath)) {
       const soulContent = fs.readFileSync(soulPath, "utf-8");
       context += `\n[SOUL.md - 핵심 원칙]\n${soulContent}\n`;
     }
 
     // 2. USER.md - 사용자 정보 (전체 로드)
-    const userPath = path.join(this.vaultPath, "USER.md");
+    const userPath = path.join(openclawDir, "USER.md");
     if (fs.existsSync(userPath)) {
       const userContent = fs.readFileSync(userPath, "utf-8");
       context += `\n[USER.md - 사용자 정보]\n${userContent}\n`;
@@ -756,7 +757,7 @@ ${relevantDocs}
 
     // 3. 오늘의 메모리 (최근 내용 중심)
     const today = new Date().toISOString().slice(0, 10);
-    const memoryPath = path.join(this.vaultPath, "memory", `${today}.md`);
+    const memoryPath = path.join(openclawDir, "memory", `${today}.md`);
     if (fs.existsSync(memoryPath)) {
       const memoryContent = fs.readFileSync(memoryPath, "utf-8");
       // 최근 2000자만 로드 (너무 길면 컨텍스트 낭비)
@@ -766,7 +767,7 @@ ${relevantDocs}
 
     // 4. 어제 메모리도 참조 (연속성)
     const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
-    const yesterdayPath = path.join(this.vaultPath, "memory", `${yesterday}.md`);
+    const yesterdayPath = path.join(openclawDir, "memory", `${yesterday}.md`);
     if (fs.existsSync(yesterdayPath)) {
       const yesterdayContent = fs.readFileSync(yesterdayPath, "utf-8");
       // 어제 내용은 요약만 (500자)
