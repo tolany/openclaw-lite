@@ -12,6 +12,7 @@ import {
   getMonthlyCost, getTodayCost
 } from "./lib/db";
 import { UtilityTools } from "./tools/utility";
+import { VectorDB } from "./lib/vectordb";
 import { logChat, logError } from "./lib/logger";
 
 dotenv.config({ path: path.resolve(__dirname, "../.env") });
@@ -26,7 +27,8 @@ const agent = new OpenClawAgent(
   apiKey,
   process.env.VAULT_PATH!,
   path.resolve(__dirname, "../persona.json"),
-  process.env.BRAVE_API_KEY
+  process.env.BRAVE_API_KEY,
+  process.env.GOOGLE_API_KEY  // For VectorDB embedding
 );
 
 const ALLOWED_ID = Number(process.env.ALLOWED_USER_ID);
@@ -146,6 +148,54 @@ bot.command("health", async (ctx) => {
     `Memory: ${health.memory.used}MB / ${health.memory.total}MB`;
 
   ctx.reply(msg, { parse_mode: "HTML" });
+});
+
+// Vector index commands
+const vectorDB = new VectorDB(process.env.GOOGLE_API_KEY!, process.env.VAULT_PATH!);
+
+bot.command("index", async (ctx) => {
+  const statusMsg = await ctx.reply("🔄 인덱싱 시작...");
+
+  try {
+    await vectorDB.init();
+    const { indexed, failed } = await vectorDB.indexVault((current, total) => {
+      // Update progress every 50 files
+      if (current % 50 === 0 || current === total) {
+        ctx.api.editMessageText(
+          ctx.chat.id,
+          statusMsg.message_id,
+          `🔄 인덱싱 중... ${current}/${total}`
+        ).catch(() => {});
+      }
+    });
+
+    await ctx.api.editMessageText(
+      ctx.chat.id,
+      statusMsg.message_id,
+      `✅ 인덱싱 완료\n\n성공: ${indexed}개\n실패: ${failed}개`
+    );
+  } catch (err: any) {
+    await ctx.api.editMessageText(
+      ctx.chat.id,
+      statusMsg.message_id,
+      `❌ 인덱싱 실패: ${err.message}`
+    );
+  }
+});
+
+bot.command("indexstats", async (ctx) => {
+  try {
+    await vectorDB.init();
+    const stats = await vectorDB.getStats();
+    ctx.reply(
+      `<b>📊 Vector Index 현황</b>\n\n` +
+      `문서 수: ${stats.count}개\n` +
+      `마지막 인덱싱: ${stats.lastIndexed || "없음"}`,
+      { parse_mode: "HTML" }
+    );
+  } catch (err: any) {
+    ctx.reply(`Error: ${err.message}`);
+  }
 });
 
 // Markdown to Telegram HTML

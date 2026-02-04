@@ -8,6 +8,7 @@ import { exec } from "child_process";
 import { LibrarianTools, JournalistTools, WebTools, UtilityTools, getToolDeclarations } from "./tools";
 import { logTool, logError } from "./lib/logger";
 import { addReminder } from "./lib/db";
+import { VectorDB } from "./lib/vectordb";
 import { ChatMessage } from "./types";
 
 // Retry configuration
@@ -57,7 +58,8 @@ const CLAUDE_TOOLS: Anthropic.Tool[] = [
   { name: "run_script", description: "Run automation scripts", input_schema: { type: "object" as const, properties: { scriptName: { type: "string" } }, required: ["scriptName"] } },
   { name: "read_pdf", description: "Read and parse PDF file content", input_schema: { type: "object" as const, properties: { filePath: { type: "string" } }, required: ["filePath"] } },
   { name: "set_reminder", description: "Set a reminder. Time can be relative (+30m, +1h, +1d) or ISO format", input_schema: { type: "object" as const, properties: { message: { type: "string" }, time: { type: "string" } }, required: ["message", "time"] } },
-  { name: "obsidian_link", description: "Generate Obsidian deep link for a file", input_schema: { type: "object" as const, properties: { filePath: { type: "string" } }, required: ["filePath"] } }
+  { name: "obsidian_link", description: "Generate Obsidian deep link for a file", input_schema: { type: "object" as const, properties: { filePath: { type: "string" } }, required: ["filePath"] } },
+  { name: "semantic_search", description: "Semantic/meaning-based search. Use for vague queries like '돈 많이 번 딜', '실패한 투자'. Returns similar documents by meaning, not keywords.", input_schema: { type: "object" as const, properties: { query: { type: "string", description: "Natural language query" }, topK: { type: "number", description: "Number of results (default 5)" } }, required: ["query"] } }
 ];
 
 export type Provider = "claude" | "gemini";
@@ -100,9 +102,10 @@ export class OpenClawAgent {
   private journalist: JournalistTools;
   private web: WebTools;
   private utility: UtilityTools;
+  private vectorDB: VectorDB;
   private userId: number = 0;
 
-  constructor(provider: Provider, apiKey: string, vaultPath: string, personaPath: string, braveApiKey?: string) {
+  constructor(provider: Provider, apiKey: string, vaultPath: string, personaPath: string, braveApiKey?: string, geminiApiKey?: string) {
     this.provider = provider;
     this.apiKey = apiKey;
     this.vaultPath = vaultPath;
@@ -124,6 +127,10 @@ export class OpenClawAgent {
     this.journalist = new JournalistTools(vaultPath);
     this.web = new WebTools(braveApiKey);
     this.utility = new UtilityTools(vaultPath);
+
+    // VectorDB uses Gemini embedding API (always use Gemini key for this)
+    const vectorApiKey = geminiApiKey || process.env.GOOGLE_API_KEY || "";
+    this.vectorDB = new VectorDB(vectorApiKey, vaultPath);
   }
 
   setUserId(userId: number) {
@@ -178,6 +185,9 @@ export class OpenClawAgent {
           break;
         case "obsidian_link":
           result = { link: this.utility.createObsidianLink(input.filePath) };
+          break;
+        case "semantic_search":
+          result = await this.vectorDB.search(input.query, input.topK || 5);
           break;
         default: result = { error: `Unknown: ${name}` };
       }

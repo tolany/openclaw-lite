@@ -146,6 +146,19 @@ export function getToolDeclarations(): Tool[] {
           properties: { filePath: { type: SchemaType.STRING, description: "Path to file in vault" } },
           required: ["filePath"]
         }
+      },
+      // Semantic search
+      {
+        name: "semantic_search",
+        description: "Semantic/meaning-based search. Use for vague queries like '돈 많이 번 딜', '실패한 투자'. Returns similar documents by meaning, not keywords.",
+        parameters: {
+          type: SchemaType.OBJECT,
+          properties: {
+            query: { type: SchemaType.STRING, description: "Natural language query" },
+            topK: { type: SchemaType.NUMBER, description: "Number of results (default 5)" }
+          },
+          required: ["query"]
+        }
       }
     ]
   }];
