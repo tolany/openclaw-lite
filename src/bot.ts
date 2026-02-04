@@ -176,13 +176,20 @@ bot.on("message:document", async (ctx) => {
 });
 
 function textToHtml(text: string): string {
+  // First, escape any < > that are NOT part of valid Telegram HTML tags
+  // Valid tags: b, i, u, s, code, pre, a
+  let result = text
+    // Escape all < > first
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    // Then restore valid HTML tags we'll create
+    .replace(/&lt;(\/?(b|i|u|s|code|pre|a))&gt;/gi, "<$1>");
+
   // Convert markdown tables to <pre> blocks (copyable in Telegram)
-  let result = text.replace(/((?:\|.+\|\n?)+)/g, (tableMatch) => {
+  result = result.replace(/((?:\|.+\|\n?)+)/g, (tableMatch) => {
     const lines = tableMatch.trim().split('\n');
-    // Filter out separator rows (| --- | --- |)
     const dataLines = lines.filter(line => !/^[\s|:-]+$/.test(line.replace(/\|/g, '')));
     if (dataLines.length > 0) {
-      // Clean up table formatting for display
       const cleanTable = dataLines.map(line => {
         return line.replace(/^\||\|$/g, '').trim();
       }).join('\n');
